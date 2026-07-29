@@ -43,8 +43,7 @@ std::string resolveBiblesDir()
 
 int main(int argc, char* argv[])
 {
-    QLoggingCategory::setFilterRules("kf.iconthemes=false\n"
-                                     "kf.*.warning=false");
+    qputenv("QT_LOGGING_RULES", "kf.*.warning=false");
 
     QApplication app(argc, argv);
     app.setApplicationName("Bible Explorer");

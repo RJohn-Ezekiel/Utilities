@@ -12,6 +12,8 @@
 
 int main(int argc, char *argv[])
 {
+    qputenv("QT_LOGGING_RULES", "kf.*.warning=false");
+
     QApplication app(argc, argv);
     app.setApplicationName(QStringLiteral("Codex"));
     app.setApplicationVersion(QStringLiteral("1.0.0"));
