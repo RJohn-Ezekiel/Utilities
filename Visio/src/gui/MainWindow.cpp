@@ -100,6 +100,16 @@ void MainWindow::setupUi()
     m_tabs->addTab(m_subList, "Subs");
 
     m_playlistList = new QListWidget(this);
+    connect(m_playlistList, &QListWidget::itemDoubleClicked,
+            this, [this](QListWidgetItem*) {
+                onLoadPlaylist();
+            });
+    connect(m_playlistList, &QListWidget::itemClicked,
+            this, [this](QListWidgetItem* item) {
+                if (item)
+                    setStatus(QString::fromStdString(
+                        std::format("Playlist: {} (double-click to open)", item->text().toStdString())));
+            });
     m_tabs->addTab(m_playlistList, "Playlists");
 
     connect(m_tabs, &QTabWidget::currentChanged, this, &MainWindow::onTabChanged);
