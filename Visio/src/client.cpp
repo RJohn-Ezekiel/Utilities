@@ -11,9 +11,25 @@
 #include <random>
 #include <set>
 #include <thread>
-
 namespace visio {
+
 namespace {
+
+/// Check if a JS runtime (deno/node) is available for yt-dlp (cached)
+const std::string& jsRuntimeFlag()
+{
+    static std::string flag = []() -> std::string {
+        auto check = [](const char* name) {
+            auto cmd = std::format("command -v {} >/dev/null 2>&1", name);
+            return std::system(cmd.c_str()) == 0;
+        };
+        if (check("deno")) return " --js-runtime deno";
+        if (check("node")) return " --js-runtime node";
+        if (check("nodejs")) return " --js-runtime node";
+        return "";
+    }();
+    return flag;
+}
 
 using json = nlohmann::json;
 
@@ -553,9 +569,9 @@ public:
     {
         // Use yt-dlp --dump-json for detailed metadata
         auto cmd = std::format(
-            "yt-dlp --dump-json --no-warnings "
+            "yt-dlp --dump-json --no-warnings{} "
             "https://www.youtube.com/watch?v={}",
-            videoId);
+            jsRuntimeFlag(), videoId);
 
         auto output = detail::exec(cmd);
         if (!output.hasValue()) {
@@ -600,65 +616,59 @@ public:
                 std::format("yt-dlp output parse error: {}", e.what()));
         }
     }
-
     Result<std::vector<Video>> getChannelVideos(
         std::string_view channelId, int limit)
     {
-        // channelId can be UC... or @handle; build correct URL
+        // Use yt-dlp to get channel videos (more reliable than HTML scraping)
         auto path = channelId.starts_with('@')
             ? std::string(channelId)
             : std::string("channel/") + std::string(channelId);
         auto url = std::format(
             "https://www.youtube.com/{}/videos", path);
 
-        auto html = detail::httpGet(url);
-        if (!html.hasValue()) {
-            return makeError<std::vector<Video>>(
-                ErrorCode::NetworkError, html.error().message());
-        }
+        auto cmd = std::format(
+            "yt-dlp --flat-playlist --dump-json{} "
+            "--playlist-end {} '{}'",
+            jsRuntimeFlag(), limit, url);
 
-        auto jsonStr = detail::extractYtInitialData(html.value());
-        if (!jsonStr.hasValue()) {
+        auto output = detail::exec(cmd);
+        if (!output.hasValue()) {
             return makeError<std::vector<Video>>(
-                ErrorCode::ParseError, jsonStr.error().message());
+                ErrorCode::NetworkError,
+                std::format("yt-dlp failed: {}", output.error().message()));
         }
 
         std::vector<Video> videos;
-        try {
-            auto data = json::parse(jsonStr.value());
-            auto tabs = data["contents"]
-                ["twoColumnBrowseResultsRenderer"]["tabs"];
-            for (const auto& tab : tabs) {
-                if (!tab.contains("tabRenderer")) continue;
-                auto& tr = tab["tabRenderer"];
-                if (!tr.contains("content")) continue;
-                if (!tr["content"].contains("richGridRenderer")) continue;
-                // Extract channel name from URL or use a fallback
-                auto channelName = channelId.starts_with('@')
-                    ? std::string(channelId)
-                    : std::string("channel");
-
-                auto contents = tr["content"]["richGridRenderer"]["contents"];
-                for (const auto& item : contents) {
-                    if (!item.contains("richItemRenderer")) continue;
-                    auto& ri = item["richItemRenderer"]["content"];
-                    if (ri.contains("videoRenderer")) {
-                        videos.push_back(
-                            parseVideoRenderer(ri["videoRenderer"]));
-                    } else if (ri.contains("lockupViewModel")) {
-                        videos.push_back(
-                            parseLockupViewModel(ri["lockupViewModel"], channelName));
-                    } else {
-                        continue;
-                    }
-                    if (static_cast<int>(videos.size()) >= limit) break;
+        auto lines = output.value();
+        size_t pos = 0;
+        while (pos < lines.size()) {
+            auto nl = lines.find('\n', pos);
+            auto line = lines.substr(pos, nl - pos);
+            if (line.empty()) { pos = nl + 1; continue; }
+            try {
+                auto item = json::parse(line);
+                Video v;
+                v.id = item.value("id", "");
+                v.title = item.value("title", "");
+                v.author = item.value("channel", item.value("uploader", ""));
+                v.duration = item.value("duration_string", item.value("duration", ""));
+                auto viewCount = item.value("view_count", 0ULL);
+                v.views = viewCount;
+                v.published = item.value("upload_date", "");
+                // Format upload_date (YYYYMMDD) to relative time
+                if (v.published.size() == 8) {
+                    v.published = std::format("{}-{}-{}",
+                        v.published.substr(0, 4),
+                        v.published.substr(4, 2),
+                        v.published.substr(6, 2));
                 }
-                if (!videos.empty()) break;
+                v.thumbnail = item.value("thumbnail", "");
+                videos.push_back(std::move(v));
+            } catch (const json::exception&) {
+                // skip malformed lines
             }
-        } catch (const json::exception& e) {
-            return makeError<std::vector<Video>>(
-                ErrorCode::ParseError,
-                std::format("channel video parse error: {}", e.what()));
+            if (static_cast<int>(videos.size()) >= limit) break;
+            pos = nl == std::string::npos ? lines.size() : nl + 1;
         }
         return videos;
     }
