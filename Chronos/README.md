@@ -98,6 +98,39 @@ src/
 └── cli/           — CLI argument parsing
 ```
 
+## Install
+
+### Quick (via install script)
+
+```bash
+git clone https://github.com/RJohn-Ezekiel/Utilities.git
+cd Utilities/Chronos
+chmod +x install.sh
+./install.sh
+```
+
+### Manual
+
+1. Build (see [Build from source](#build-from-source))
+2. Copy `build/src/chronos` to `~/.local/bin/chronos.bin`
+3. Create `~/.local/bin/chronos` wrapper:
+   ```bash
+   cat > ~/.local/bin/chronos << 'EOF'
+   #!/bin/bash
+   export QT_LOGGING_RULES="kf.*.warning=false"
+   export QT_QPA_PLATFORMTHEME=""
+   exec "$0.bin" "$@"
+   EOF
+   chmod +x ~/.local/bin/chronos
+   ```
+4. Ensure `~/.local/bin` is in your `PATH`
+
+### Uninstall
+
+```bash
+rm -f ~/.local/bin/chronos ~/.local/bin/chronos.bin
+```
+
 ## License
 
 MIT

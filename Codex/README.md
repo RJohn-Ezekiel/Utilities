@@ -97,6 +97,39 @@ cmake --build build
 ./build/tests/test_codex
 ```
 
+## Install
+
+### Quick (via install script)
+
+```bash
+git clone https://github.com/RJohn-Ezekiel/Utilities.git
+cd Utilities/Codex
+chmod +x install.sh
+./install.sh
+```
+
+### Manual
+
+1. Build (see [Build from source](#build-from-source))
+2. Copy `build/bin/codex` to `~/.local/bin/codex.bin`
+3. Create `~/.local/bin/codex` wrapper:
+   ```bash
+   cat > ~/.local/bin/codex << 'EOF'
+   #!/bin/bash
+   export QT_LOGGING_RULES="kf.*.warning=false"
+   export QT_QPA_PLATFORMTHEME=""
+   exec "$0.bin" "$@"
+   EOF
+   chmod +x ~/.local/bin/codex
+   ```
+4. Ensure `~/.local/bin` is in your `PATH`
+
+### Uninstall
+
+```bash
+rm -f ~/.local/bin/codex ~/.local/bin/codex.bin
+```
+
 ## Vault Layout
 
 ```

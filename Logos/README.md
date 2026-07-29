@@ -98,3 +98,36 @@ Built-in translations are in `Bibles/`:
 |---------------|--------------------------|
 | `kjv.json`    | King James Version       |
 | `vulg.json`   | Latin Vulgate            |
+
+## Install
+
+### Quick (via install script)
+
+```bash
+git clone https://github.com/RJohn-Ezekiel/Utilities.git
+cd Utilities/Logos
+chmod +x install.sh
+./install.sh
+```
+
+### Manual
+
+1. Build (see [Build from source](#build-from-source))
+2. Copy `build/logos` to `~/.local/bin/logos.bin`
+3. Create `~/.local/bin/logos` wrapper:
+   ```bash
+   cat > ~/.local/bin/logos << 'EOF'
+   #!/bin/bash
+   export QT_LOGGING_RULES="kf.*.warning=false"
+   export QT_QPA_PLATFORMTHEME=""
+   exec "$0.bin" "$@"
+   EOF
+   chmod +x ~/.local/bin/logos
+   ```
+4. Ensure `~/.local/bin` is in your `PATH` (add `export PATH="$HOME/.local/bin:$PATH"` to `~/.bashrc` or `~/.zshrc`)
+
+### Uninstall
+
+```bash
+rm -f ~/.local/bin/logos ~/.local/bin/logos.bin
+```
