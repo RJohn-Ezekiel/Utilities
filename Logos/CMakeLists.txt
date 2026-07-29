@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(BibleExplorer VERSION 1.0.0 LANGUAGES CXX)
+project(Logos VERSION 1.0.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -11,11 +11,11 @@ find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
 
 add_subdirectory(src)
 
-add_executable(bible src/main.cpp)
-target_compile_definitions(bible PRIVATE
+add_executable(logos src/main.cpp)
+target_compile_definitions(logos PRIVATE
     BIBLES_DIR="${CMAKE_SOURCE_DIR}/Bibles"
 )
-target_link_libraries(bible PRIVATE
+target_link_libraries(logos PRIVATE
     bible_core
     bible_data
     bible_storage
@@ -27,8 +27,8 @@ target_link_libraries(bible PRIVATE
 )
 
 # Install
-install(TARGETS bible RUNTIME DESTINATION bin)
-install(DIRECTORY Bibles/ DESTINATION share/bible-explorer/Bibles)
+install(TARGETS logos RUNTIME DESTINATION bin)
+install(DIRECTORY Bibles/ DESTINATION share/logos/Bibles)
 
 # Add tests subdirectory if it exists
 option(BUILD_TESTS "Build unit tests" OFF)

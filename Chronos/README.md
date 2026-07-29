@@ -1,53 +1,31 @@
 # Chronos
 
-A desktop focus timer app built with C++20 and Qt6. Features Pomodoro-style timers, task management, health reminders, and session statistics.
+![screenshot](demo.png)
+
+A cross-platform desktop focus timer with Pomodoro sessions, task management, health reminders, session statistics, and a compact mini-mode.
+
+Built with **C++20** and **Qt 6**.
 
 ## Features
 
-- **Focus Timer** – Pomodoro sessions with configurable focus/break durations
-- **Task Management** – Create tasks and start focus sessions for them
-- **Health Reminders** – Periodic reminders to drink water, stand, stretch, and rest your eyes
-- **Statistics & History** – Track focus time, sessions completed, and streaks
-- **Mini Mode** – Compact always-on-top window for minimal distraction
-- **Notifications** – Toast notifications and sound alerts
-- **Dark Theme** – Clean dark UI throughout
-
-## Building
-
-### Dependencies
-
-- CMake 3.22+
-- Qt6 (Core, Gui, Widgets, Multimedia)
-- C++20 compiler
-
-### Build
-
-```bash
-cmake -S . -B build
-cmake --build build
-```
-
-### Install (optional – makes `chronos` available from anywhere)
-
-```bash
-sudo cmake --install build
-```
-
-Or create a symlink manually:
-
-```bash
-ln -sf "$(pwd)/build/chronos" ~/.local/bin/chronos
-```
+- **Focus Timer** — Pomodoro-style sessions with configurable focus and break durations
+- **Task Management** — create tasks and start focus sessions tied to them
+- **Health Reminders** — periodic reminders to drink water, stand, stretch, and rest your eyes
+- **Statistics & History** — track total focus time, sessions completed, daily streaks
+- **Mini Mode** — compact always-on-top window for minimal distraction
+- **Notifications** — toast notifications and sound alerts at session boundaries
+- **Water Meter** — visual hydration tracker
+- **Dark theme** throughout
 
 ## Usage
 
-Run the app:
-
-```bash
-./build/chronos
+```
+chronos                         Launch GUI
+chronos --help                  Display help
+chronos --version               Show version
 ```
 
-Keyboard shortcuts:
+### Keyboard shortcuts
 
 | Key       | Action              |
 |-----------|---------------------|
@@ -57,17 +35,67 @@ Keyboard shortcuts:
 | `Ctrl+M`  | Toggle mini mode    |
 | `Ctrl+Q`  | Quit                |
 
+## Build from source
+
+### Prerequisites
+
+| Requirement   | Minimum version | How to check            |
+|---------------|-----------------|-------------------------|
+| CMake         | 3.22            | `cmake --version`       |
+| C++ compiler  | GCC 11+ / Clang 14+ | `g++ --version`    |
+| Qt 6          | 6.5+            | `qmake6 --version`      |
+
+### Install dependencies
+
+```bash
+# Debian / Ubuntu
+sudo apt install build-essential cmake qt6-base-dev qt6-multimedia-dev
+
+# Fedora
+sudo dnf install gcc-c++ cmake qt6-qtbase-devel qt6-qtmultimedia-devel
+
+# Arch Linux
+sudo pacman -S base-devel cmake qt6-base qt6-multimedia
+
+# openSUSE
+sudo zypper install gcc-c++ cmake qt6-base-devel qt6-multimedia-devel
+```
+
+### Build
+
+```bash
+git clone <repository-url>
+cd Personal-Utilities/Chronos
+
+cmake -S . -B build
+cmake --build build
+```
+
+### Run
+
+```bash
+./build/chronos
+```
+
+### Run tests (optional)
+
+```bash
+cmake -B build -DBUILD_TESTS=ON
+cmake --build build -j$(nproc)
+./build/tests/test_chronos
+```
+
 ## Project Structure
 
 ```
 src/
 ├── main.cpp
-├── core/          – Timer engine logic
-├── models/        – Data models (Settings, Task, Session, Statistics)
-├── storage/       – JSON file persistence
-├── services/      – Timer, audio, notification, reminder services
-├── ui/            – Qt widgets (dashboard, timer, settings, etc.)
-└── cli/           – CLI argument parsing
+├── core/          — Timer engine logic
+├── models/        — Data models (Settings, Task, Session, Statistics)
+├── storage/       — JSON file persistence
+├── services/      — Timer, audio, notification, reminder services
+├── ui/            — Qt widgets (dashboard, timer, settings, etc.)
+└── cli/           — CLI argument parsing
 ```
 
 ## License

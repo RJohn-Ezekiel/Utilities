@@ -15,28 +15,28 @@ constexpr auto APP_VERSION = "1.0.0";
 
 void printHelp()
 {
-    std::cout << "Bible Explorer v" << APP_VERSION << "\n"
+    std::cout << "Logos v" << APP_VERSION << "\n"
               << "Usage:\n"
-              << "  bible                          Launch GUI\n"
-              << "  bible --help                   Display this help\n"
-              << "  bible --version                Display version\n"
-              << "  bible <reference>              Display passage\n"
-              << "  bible --search <query>         Search for text\n"
-              << "  bible --random                 Random verse\n"
-              << "  bible --today                  Daily verse\n"
+              << "  logos                          Launch GUI\n"
+              << "  logos --help                   Display this help\n"
+              << "  logos --version                Display version\n"
+              << "  logos <reference>              Display passage\n"
+              << "  logos --search <query>         Search for text\n"
+              << "  logos --random                 Random verse\n"
+              << "  logos --today                  Daily verse\n"
               << "\n"
               << "Examples:\n"
-              << "  bible John 3:16\n"
-              << "  bible John 3\n"
-              << "  bible John 3:16-18\n"
-              << "  bible 1 Peter 5:7\n"
-              << "  bible --search faith\n"
+              << "  logos John 3:16\n"
+              << "  logos John 3\n"
+              << "  logos John 3:16-18\n"
+              << "  logos 1 Peter 5:7\n"
+              << "  logos --search faith\n"
               << std::endl;
 }
 
 void printVersion()
 {
-    std::cout << "Bible Explorer v" << APP_VERSION << std::endl;
+    std::cout << "Logos v" << APP_VERSION << std::endl;
 }
 
 void printVerse(const std::string& bookName, int chapter, int verse,

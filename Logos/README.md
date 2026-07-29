@@ -58,10 +58,11 @@ sudo zypper install gcc-c++ cmake qt6-base-devel
 ### Build
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/Logos.git
-cd Logos
-cmake -B build -DCMAKE_BUILD_TYPE=Release
-cmake --build build -j$(nproc)
+git clone <repository-url>
+cd Personal-Utilities/Logos
+
+cmake -S . -B build
+cmake --build build
 ```
 
 > CMake detects Qt 6 automatically on most systems.  
@@ -73,12 +74,12 @@ cmake --build build -j$(nproc)
 sudo cmake --install build
 ```
 
-This copies the binary to `/usr/local/bin` and data to `/usr/local/share/bible-explorer/`.
+This copies the binary to `/usr/local/bin` and data to `/usr/local/share/logos/`.
 
 ### Run
 
 ```bash
-./build/bible
+./build/logos
 ```
 
 ### Run tests (optional)
@@ -86,7 +87,7 @@ This copies the binary to `/usr/local/bin` and data to `/usr/local/share/bible-e
 ```bash
 cmake -B build -DBUILD_TESTS=ON
 cmake --build build -j$(nproc)
-./build/tests/test_bible_explorer
+./build/tests/test_logos
 ```
 
 ## Data
