@@ -93,7 +93,6 @@ private:
     QPushButton* m_searchChannelBtn{};
     QPushButton* m_clearHistoryBtn{};
     QPushButton* m_clearQueueBtn{};
-    QPushButton* m_removeHistoryBtn{};
     QPushButton* m_removeQueueBtn{};
     QPushButton* m_saveQueueBtn{};
     QPushButton* m_loadPlaylistBtn{};

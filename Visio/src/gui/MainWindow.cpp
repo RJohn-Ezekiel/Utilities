@@ -120,9 +120,21 @@ void MainWindow::setupUi()
     auto* historyBar = new QHBoxLayout();
     m_clearHistoryBtn = new QPushButton("Clear History", this);
     connect(m_clearHistoryBtn, &QPushButton::clicked, this, &MainWindow::onClearHistory);
-    m_removeHistoryBtn = new QPushButton("Remove Selected", this);
-    connect(m_removeHistoryBtn, &QPushButton::clicked, this, &MainWindow::onRemoveFromHistory);
-    historyBar->addWidget(m_removeHistoryBtn);
+    auto* historyToQueueBtn = new QPushButton("Add All to Queue", this);
+    historyToQueueBtn->setToolTip("Add all history items to the playback queue");
+    connect(historyToQueueBtn, &QPushButton::clicked, this, [this]() {
+        auto history = m_client.getHistory();
+        if (!history.hasValue() || history.value().empty()) {
+            setStatus("History is empty");
+            return;
+        }
+        for (const auto& v : history.value())
+            m_client.addToQueue(v);
+        populateQueue();
+        setStatus(QString::fromStdString(
+            std::format("Added {} videos from history to queue", history.value().size())));
+    });
+    historyBar->addWidget(historyToQueueBtn);
     historyBar->addWidget(m_clearHistoryBtn);
     leftLayout->addLayout(historyBar);
 
