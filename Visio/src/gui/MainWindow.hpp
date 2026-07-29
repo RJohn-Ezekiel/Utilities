@@ -31,6 +31,8 @@ private slots:
     void onSearchResultClicked(int row);
     void onPlay();
     void onDownload();
+    void onDownloadMp3();
+    void onDownloadPlaylist();
     void onAddToQueue();
     void onClearHistory();
     void onClearQueue();
@@ -82,6 +84,8 @@ private:
     QTextEdit* m_description{};
     QPushButton* m_playBtn{};
     QPushButton* m_downloadBtn{};
+    QPushButton* m_downloadMp3Btn{};
+    QPushButton* m_downloadPlaylistBtn{};
     QPushButton* m_queueBtn{};
     QPushButton* m_subscribeBtn{};
     QPushButton* m_unsubscribeBtn{};

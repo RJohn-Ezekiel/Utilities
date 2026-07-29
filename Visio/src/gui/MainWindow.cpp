@@ -13,6 +13,7 @@
 #include <QFileDialog>
 #include <QApplication>
 #include <QDesktopServices>
+#include <QDir>
 #include <QUrl>
 #include <QFont>
 #include <QScrollArea>
@@ -132,9 +133,13 @@ void MainWindow::setupUi()
     m_loadPlaylistBtn = new QPushButton("Open", this);
     m_loadPlaylistBtn->setToolTip("Load playlist videos into the Search tab");
     connect(m_loadPlaylistBtn, &QPushButton::clicked, this, &MainWindow::onLoadPlaylist);
+    m_downloadPlaylistBtn = new QPushButton("Download All", this);
+    m_downloadPlaylistBtn->setToolTip("Download all videos in search results or loaded playlist");
+    connect(m_downloadPlaylistBtn, &QPushButton::clicked, this, &MainWindow::onDownloadPlaylist);
     m_deletePlaylistBtn = new QPushButton("Delete", this);
     connect(m_deletePlaylistBtn, &QPushButton::clicked, this, &MainWindow::onDeletePlaylist);
     playlistBar->addWidget(m_loadPlaylistBtn);
+    playlistBar->addWidget(m_downloadPlaylistBtn);
     playlistBar->addWidget(m_deletePlaylistBtn);
     leftLayout->addLayout(playlistBar);
 
@@ -233,6 +238,11 @@ void MainWindow::setupUi()
     m_downloadBtn = new QPushButton("Download", this);
     connect(m_downloadBtn, &QPushButton::clicked, this, &MainWindow::onDownload);
     topRow->addWidget(m_downloadBtn);
+
+    m_downloadMp3Btn = new QPushButton("MP3", this);
+    m_downloadMp3Btn->setToolTip("Download audio as MP3 with thumbnail and metadata");
+    connect(m_downloadMp3Btn, &QPushButton::clicked, this, &MainWindow::onDownloadMp3);
+    topRow->addWidget(m_downloadMp3Btn);
 
     actionsLayout->addLayout(topRow);
 
@@ -496,6 +506,54 @@ void MainWindow::onDownload()
         setStatus(QString::fromStdString(std::format("Downloaded to: {}", dir.toStdString())));
     } else {
         setStatus(QString::fromStdString(std::format("Download failed: {}", result.error().message())));
+    }
+}
+
+void MainWindow::onDownloadMp3()
+{
+    if (m_currentVideo.id.empty()) return;
+
+    auto dir = QFileDialog::getExistingDirectory(this, "Download MP3 to",
+        QDir::homePath() + "/Downloads");
+    if (dir.isEmpty()) return;
+
+    setStatus(QString::fromStdString(std::format("Downloading MP3: {}", m_currentVideo.title)));
+
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+    auto result = m_client.downloadAudio(m_currentVideo, dir.toStdString());
+    QApplication::restoreOverrideCursor();
+
+    if (result.hasValue()) {
+        setStatus(QString::fromStdString(std::format("MP3 downloaded to: {}", dir.toStdString())));
+    } else {
+        setStatus(QString::fromStdString(std::format("MP3 download failed: {}", result.error().message())));
+    }
+}
+
+void MainWindow::onDownloadPlaylist()
+{
+    if (m_currentResults.empty()) {
+        setStatus("No results to download. Search something first, or load a playlist.");
+        return;
+    }
+
+    auto dir = QFileDialog::getExistingDirectory(this, "Download All to",
+        QDir::homePath() + "/Downloads");
+    if (dir.isEmpty()) return;
+
+    auto quality = static_cast<Quality>(m_qualitySelector->currentData().toInt());
+
+    setStatus(QString::fromStdString(std::format("Downloading {} videos...", m_currentResults.size())));
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+
+    auto result = m_client.downloadMultiple(m_currentResults, dir.toStdString(), quality);
+
+    QApplication::restoreOverrideCursor();
+
+    if (result.hasValue()) {
+        setStatus(QString::fromStdString(std::format("Downloaded {} videos to: {}", m_currentResults.size(), dir.toStdString())));
+    } else {
+        setStatus(QString::fromStdString(std::format("Batch download failed: {}", result.error().message())));
     }
 }
 

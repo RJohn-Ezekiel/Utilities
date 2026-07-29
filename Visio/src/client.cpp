@@ -677,17 +677,111 @@ public:
             break;
         }
 
+        auto metaFlags = std::string(
+            "--write-thumbnail --write-info-json "
+            "--embed-metadata --convert-thumbnails jpg ");
+
         auto cmd = audioOnly
             ? std::format(
                 "yt-dlp -x --audio-format mp3 --audio-quality 0 "
+                "{}"
                 "--quiet -o '{}/%(title)s [%(id)s].%(ext)s' '{}'",
-                dir, url)
+                metaFlags, dir, url)
             : std::format(
                 "yt-dlp --remux-video mp4 --format '{}' "
+                "{}"
                 "--quiet -o '{}/%(title)s [%(id)s].%(ext)s' '{}'",
-                fmtCode, dir, url);
+                fmtCode, metaFlags, dir, url);
 
         auto result = detail::exec(cmd);
+        if (!result.hasValue()) {
+            return Result<void>(result.error());
+        }
+        return Result<void>{};
+    }
+
+    Result<void> downloadAudio(
+        const Video& video,
+        std::string_view directory)
+    {
+        auto url = std::format("https://www.youtube.com/watch?v={}",
+                               video.id);
+        auto dir = directory.empty()
+            ? (std::string(std::getenv("HOME") ? std::getenv("HOME") : "/tmp") + "/Downloads")
+            : std::string(directory);
+
+        auto cmd = std::format(
+            "yt-dlp -x --audio-format mp3 --audio-quality 0 "
+            "--write-thumbnail --write-info-json "
+            "--embed-metadata --embed-thumbnail --convert-thumbnails jpg "
+            "--quiet -o '{}/%(title)s [%(id)s].%(ext)s' '{}'",
+            dir, url);
+
+        auto result = detail::exec(cmd);
+        if (!result.hasValue()) {
+            return Result<void>(result.error());
+        }
+        return Result<void>{};
+    }
+
+    Result<void> downloadMultiple(
+        const std::vector<Video>& videos,
+        std::string_view directory,
+        Quality quality)
+    {
+        auto dir = directory.empty()
+            ? (std::string(std::getenv("HOME") ? std::getenv("HOME") : "/tmp") + "/Downloads")
+            : std::string(directory);
+
+        std::string fmtCode;
+        bool audioOnly = false;
+        switch (quality) {
+        case Quality::Best:   fmtCode = "bestvideo+bestaudio/best"; break;
+        case Quality::Worst:  fmtCode = "worst"; break;
+        case Quality::P720:   fmtCode = "bestvideo[height<=720]+bestaudio/best"; break;
+        case Quality::P1080:  fmtCode = "bestvideo[height<=1080]+bestaudio/best"; break;
+        case Quality::P2160:  fmtCode = "bestvideo[height<=2160]+bestaudio/best"; break;
+        case Quality::AudioOnly:
+            audioOnly = true;
+            fmtCode = "bestaudio/best";
+            break;
+        }
+
+        // Build a playlist file for batch download
+        auto plPath = std::string(dir) + "/.visio_batch_pl.txt";
+        {
+            std::ofstream pl(plPath);
+            if (!pl.is_open()) {
+                return Result<void>(Error(
+                    ErrorCode::NetworkError,
+                    "failed to create batch playlist file"));
+            }
+            for (const auto& v : videos) {
+                pl << "https://www.youtube.com/watch?v=" << v.id << "\n";
+            }
+        }
+
+        auto metaFlags = std::string(
+            "--write-thumbnail --write-info-json "
+            "--embed-metadata --convert-thumbnails jpg ");
+
+        auto cmd = audioOnly
+            ? std::format(
+                "yt-dlp -x --audio-format mp3 --audio-quality 0 "
+                "--batch-file '{}' "
+                "{}"
+                "--quiet -o '{}/%(title)s [%(id)s].%(ext)s'",
+                plPath, metaFlags, dir)
+            : std::format(
+                "yt-dlp --remux-video mp4 --format '{}' "
+                "--batch-file '{}' "
+                "{}"
+                "--quiet -o '{}/%(title)s [%(id)s].%(ext)s'",
+                fmtCode, plPath, metaFlags, dir);
+
+        auto result = detail::exec(cmd);
+        std::filesystem::remove(plPath);
+
         if (!result.hasValue()) {
             return Result<void>(result.error());
         }
@@ -1109,6 +1203,21 @@ Result<void> Client::download(
     Quality quality)
 {
     return m_impl->download(video, directory, quality);
+}
+
+Result<void> Client::downloadAudio(
+    const Video& video,
+    std::string_view directory)
+{
+    return m_impl->downloadAudio(video, directory);
+}
+
+Result<void> Client::downloadMultiple(
+    const std::vector<Video>& videos,
+    std::string_view directory,
+    Quality quality)
+{
+    return m_impl->downloadMultiple(videos, directory, quality);
 }
 
 Result<std::vector<Video>> Client::getHistory()

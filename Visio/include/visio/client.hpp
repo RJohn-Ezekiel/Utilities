@@ -70,6 +70,17 @@ public:
         std::string_view directory = {},
         Quality quality = Quality::Best);
 
+    /// Download audio-only (MP3) with thumbnail and metadata.
+    Result<void> downloadAudio(
+        const Video& video,
+        std::string_view directory = {});
+
+    /// Download multiple videos as a batch (e.g. playlist).
+    Result<void> downloadMultiple(
+        const std::vector<Video>& videos,
+        std::string_view directory = {},
+        Quality quality = Quality::Best);
+
     // ---- History ----
 
     /// Retrieve watch history.
