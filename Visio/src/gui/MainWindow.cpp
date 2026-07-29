@@ -91,6 +91,10 @@ void MainWindow::setupUi()
             this, [this](QListWidgetItem* item) {
                 onSubClicked(m_subList->row(item));
             });
+    connect(m_subList, &QListWidget::itemSelectionChanged,
+            this, [this]() {
+                m_unsubscribeBtn->setEnabled(!m_subList->selectedItems().isEmpty());
+            });
     m_tabs->addTab(m_subList, "Subs");
 
     m_playlistList = new QListWidget(this);
@@ -137,6 +141,7 @@ void MainWindow::setupUi()
     // Subs buttons
     auto* subBar = new QHBoxLayout();
     m_unsubscribeBtn = new QPushButton("Unsubscribe", this);
+    m_unsubscribeBtn->setEnabled(false);
     connect(m_unsubscribeBtn, &QPushButton::clicked, this, &MainWindow::onUnsubscribe);
     m_searchChannelBtn = new QPushButton("Search Channels", this);
     m_searchChannelBtn->setToolTip("Search for a channel to subscribe");
@@ -614,11 +619,11 @@ void MainWindow::onQueueClicked(int row)
 void MainWindow::onSubClicked(int row)
 {
     if (row < 0) return;
-    auto items = m_subList->selectedItems();
-    if (items.isEmpty()) return;
+    auto item = m_subList->item(row);
+    if (!item) return;
 
-    auto channelId = items[0]->data(Qt::UserRole).toString().toStdString();
-    auto channelName = items[0]->data(Qt::UserRole + 1).toString().toStdString();
+    auto channelId = item->data(Qt::UserRole).toString().toStdString();
+    auto channelName = item->data(Qt::UserRole + 1).toString().toStdString();
 
     setStatus(QString::fromStdString(std::format("Loading videos from {}...", channelName)));
     QApplication::processEvents();

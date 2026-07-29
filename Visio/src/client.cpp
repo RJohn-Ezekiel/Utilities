@@ -543,8 +543,12 @@ public:
     Result<std::vector<Video>> getChannelVideos(
         std::string_view channelId, int limit)
     {
+        // channelId can be UC... or @handle; build correct URL
+        auto path = channelId.starts_with('@')
+            ? std::string(channelId)
+            : std::string("channel/") + std::string(channelId);
         auto url = std::format(
-            "https://www.youtube.com/{}/videos", channelId);
+            "https://www.youtube.com/{}/videos", path);
 
         auto html = detail::httpGet(url);
         if (!html.hasValue()) {
