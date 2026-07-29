@@ -1,0 +1,35 @@
+# Build directories
+build/
+*/build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Qt Creator
+*.pro.user
+*.creator.user
+
+# CMake
+CMakeFiles/
+cmake_install.cmake
+CMakeCache.txt
+Makefile
+*.a
+*.so
+*.o
+moc_*
+qrc_*
+ui_*
+*_autogen/
+
+# Old root-level files
+Book/
+codex

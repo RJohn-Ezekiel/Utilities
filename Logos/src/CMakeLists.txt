@@ -1,0 +1,6 @@
+add_subdirectory(core)
+add_subdirectory(data)
+add_subdirectory(storage)
+add_subdirectory(services)
+add_subdirectory(cli)
+add_subdirectory(ui)
