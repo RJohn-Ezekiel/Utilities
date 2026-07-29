@@ -11,10 +11,15 @@
 #include "ui/MainWindow.h"
 #include "cli/CommandLineParser.h"
 
-int main(int argc, char* argv[])
+__attribute__((constructor))
+static void earlySuppress()
 {
     qputenv("QT_LOGGING_RULES", "kf.*.warning=false");
+    qputenv("QT_QPA_PLATFORMTHEME", "");
+}
 
+int main(int argc, char* argv[])
+{
     QApplication app(argc, argv);
     app.setApplicationName(QStringLiteral("Chronos"));
     app.setApplicationVersion(QStringLiteral("1.0.0"));

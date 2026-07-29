@@ -41,14 +41,19 @@ std::string resolveBiblesDir()
 
 } // namespace
 
-int main(int argc, char* argv[])
+__attribute__((constructor))
+static void earlySuppress()
 {
     qputenv("QT_LOGGING_RULES", "kf.*.warning=false");
+    qputenv("QT_QPA_PLATFORMTHEME", "");
+}
 
+int main(int argc, char* argv[])
+{
     QApplication app(argc, argv);
-    app.setApplicationName("Bible Explorer");
+    app.setApplicationName("Logos");
     app.setApplicationVersion("1.0.0");
-    app.setOrganizationName("BibleExplorer");
+    app.setOrganizationName("Logos");
 
     QFont defaultFont("JetBrains Mono", 10);
     defaultFont.setStyleHint(QFont::Monospace);
