@@ -18,6 +18,7 @@
 #include <QFont>
 #include <QScrollArea>
 
+#include <thread>
 #include <format>
 
 namespace visio {
@@ -480,10 +481,17 @@ void MainWindow::onPlay()
 {
     if (m_currentVideo.id.empty()) return;
     auto quality = static_cast<Quality>(m_qualitySelector->currentData().toInt());
-    setStatus(QString::fromStdString(std::format("Playing: {}", m_currentVideo.title)));
-    m_client.play(m_currentVideo, quality);
-    populateHistory();
-    setStatus("Playback finished");
+    auto video = m_currentVideo;
+
+    setStatus(QString::fromStdString(std::format("Playing: {}", video.title)));
+
+    std::thread([this, video, quality]() {
+        m_client.play(video, quality);
+        QMetaObject::invokeMethod(this, [this]() {
+            populateHistory();
+            setStatus("Playback finished");
+        }, Qt::QueuedConnection);
+    }).detach();
 }
 
 void MainWindow::onDownload()
@@ -495,18 +503,20 @@ void MainWindow::onDownload()
     if (dir.isEmpty()) return;
 
     auto quality = static_cast<Quality>(m_qualitySelector->currentData().toInt());
-    setStatus(QString::fromStdString(std::format("Downloading: {}", m_currentVideo.title)));
+    auto video = m_currentVideo;
+    auto dirStr = dir.toStdString();
 
-    QApplication::setOverrideCursor(Qt::WaitCursor);
-    auto result = m_client.download(m_currentVideo,
-        dir.toStdString(), quality);
-    QApplication::restoreOverrideCursor();
+    setStatus(QString::fromStdString(std::format("Downloading: {}", video.title)));
 
-    if (result.hasValue()) {
-        setStatus(QString::fromStdString(std::format("Downloaded to: {}", dir.toStdString())));
-    } else {
-        setStatus(QString::fromStdString(std::format("Download failed: {}", result.error().message())));
-    }
+    std::thread([this, video, dirStr, quality]() {
+        auto result = m_client.download(video, dirStr, quality);
+        auto ok = result.hasValue();
+        auto msg = ok ? std::string("Download complete")
+                      : std::format("Download failed: {}", result.error().message());
+        QMetaObject::invokeMethod(this, [this, ok, msg]() {
+            setStatus(QString::fromStdString(msg));
+        }, Qt::QueuedConnection);
+    }).detach();
 }
 
 void MainWindow::onDownloadMp3()
@@ -517,17 +527,20 @@ void MainWindow::onDownloadMp3()
         QDir::homePath() + "/Downloads");
     if (dir.isEmpty()) return;
 
-    setStatus(QString::fromStdString(std::format("Downloading MP3: {}", m_currentVideo.title)));
+    auto video = m_currentVideo;
+    auto dirStr = dir.toStdString();
 
-    QApplication::setOverrideCursor(Qt::WaitCursor);
-    auto result = m_client.downloadAudio(m_currentVideo, dir.toStdString());
-    QApplication::restoreOverrideCursor();
+    setStatus(QString::fromStdString(std::format("Downloading MP3: {}", video.title)));
 
-    if (result.hasValue()) {
-        setStatus(QString::fromStdString(std::format("MP3 downloaded to: {}", dir.toStdString())));
-    } else {
-        setStatus(QString::fromStdString(std::format("MP3 download failed: {}", result.error().message())));
-    }
+    std::thread([this, video, dirStr]() {
+        auto result = m_client.downloadAudio(video, dirStr);
+        auto ok = result.hasValue();
+        auto msg = ok ? std::string("MP3 download complete")
+                      : std::format("MP3 download failed: {}", result.error().message());
+        QMetaObject::invokeMethod(this, [this, ok, msg]() {
+            setStatus(QString::fromStdString(msg));
+        }, Qt::QueuedConnection);
+    }).detach();
 }
 
 void MainWindow::onDownloadPlaylist()
@@ -542,19 +555,20 @@ void MainWindow::onDownloadPlaylist()
     if (dir.isEmpty()) return;
 
     auto quality = static_cast<Quality>(m_qualitySelector->currentData().toInt());
+    auto results = m_currentResults;
+    auto dirStr = dir.toStdString();
 
-    setStatus(QString::fromStdString(std::format("Downloading {} videos...", m_currentResults.size())));
-    QApplication::setOverrideCursor(Qt::WaitCursor);
+    setStatus(QString::fromStdString(std::format("Downloading {} videos...", results.size())));
 
-    auto result = m_client.downloadMultiple(m_currentResults, dir.toStdString(), quality);
-
-    QApplication::restoreOverrideCursor();
-
-    if (result.hasValue()) {
-        setStatus(QString::fromStdString(std::format("Downloaded {} videos to: {}", m_currentResults.size(), dir.toStdString())));
-    } else {
-        setStatus(QString::fromStdString(std::format("Batch download failed: {}", result.error().message())));
-    }
+    std::thread([this, results, dirStr, quality]() {
+        auto result = m_client.downloadMultiple(results, dirStr, quality);
+        auto ok = result.hasValue();
+        auto msg = ok ? std::string("Batch download complete")
+                      : std::format("Batch download failed: {}", result.error().message());
+        QMetaObject::invokeMethod(this, [this, ok, msg]() {
+            setStatus(QString::fromStdString(msg));
+        }, Qt::QueuedConnection);
+    }).detach();
 }
 
 void MainWindow::onAddToQueue()

@@ -197,6 +197,67 @@ bool writeJsonFile(const std::string& path, const json& data)
     return video;
 }
 
+[[nodiscard]] Video parseLockupViewModel(const json& lvm, std::string_view channelName)
+{
+    Video video;
+    video.id = lvm.value("contentId", "");
+    video.author = channelName;
+
+    auto md = lvm.value("metadata", json::object());
+    auto lmv = md.value("lockupMetadataViewModel", json::object());
+    video.title = lmv.value("title", json::object()).value("content", "");
+
+    // Duration from accessibility label
+    auto rc = lvm.value("rendererContext", json::object());
+    auto ac = rc.value("accessibilityContext", json::object());
+    auto label = ac.value("label", "");
+    // Extract duration from label like "12 minutes, 49 seconds"
+    if (!label.empty()) {
+        // Try to parse duration from accessibility label
+        if (label.find("second") != std::string::npos) {
+            video.duration = label;
+        }
+    }
+
+    // Views and published from metadataRows
+    auto innerMd = lmv.value("metadata", json::object());
+    auto cvm = innerMd.value("contentMetadataViewModel", json::object());
+    auto rows = cvm.value("metadataRows", json::array());
+    for (const auto& row : rows) {
+        auto parts = row.value("metadataParts", json::array());
+        for (const auto& part : parts) {
+            auto text = part.value("text", json::object()).value("content", "");
+            if (text.find("view") != std::string::npos) {
+                video.views = parseViews(text).value_or(0);
+            } else if (text.find("ago") != std::string::npos ||
+                       text.find("minute") != std::string::npos ||
+                       text.find("hour") != std::string::npos ||
+                       text.find("day") != std::string::npos ||
+                       text.find("week") != std::string::npos ||
+                       text.find("month") != std::string::npos ||
+                       text.find("year") != std::string::npos) {
+                video.published = text;
+            }
+        }
+    }
+
+    // Thumbnail
+    auto ci = lvm.value("contentImage", json::object());
+    auto tvm = ci.value("thumbnailViewModel", json::object());
+    auto img = tvm.value("image", json::object());
+    auto sources = img.value("sources", json::array());
+    int bestW = 0;
+    for (const auto& src : sources) {
+        int w = src.value("width", 0);
+        if (w > bestW) {
+            bestW = w;
+            video.thumbnail = src.value("url", "");
+        }
+    }
+
+    return video;
+}
+
 [[nodiscard]] Result<std::vector<Video>> parseVideoResults(const json& data)
 {
     std::vector<Video> videos;
@@ -572,13 +633,24 @@ public:
                 auto& tr = tab["tabRenderer"];
                 if (!tr.contains("content")) continue;
                 if (!tr["content"].contains("richGridRenderer")) continue;
+                // Extract channel name from URL or use a fallback
+                auto channelName = channelId.starts_with('@')
+                    ? std::string(channelId)
+                    : std::string("channel");
+
                 auto contents = tr["content"]["richGridRenderer"]["contents"];
                 for (const auto& item : contents) {
                     if (!item.contains("richItemRenderer")) continue;
                     auto& ri = item["richItemRenderer"]["content"];
-                    if (!ri.contains("videoRenderer")) continue;
-                    videos.push_back(
-                        parseVideoRenderer(ri["videoRenderer"]));
+                    if (ri.contains("videoRenderer")) {
+                        videos.push_back(
+                            parseVideoRenderer(ri["videoRenderer"]));
+                    } else if (ri.contains("lockupViewModel")) {
+                        videos.push_back(
+                            parseLockupViewModel(ri["lockupViewModel"], channelName));
+                    } else {
+                        continue;
+                    }
                     if (static_cast<int>(videos.size()) >= limit) break;
                 }
                 if (!videos.empty()) break;
@@ -678,20 +750,16 @@ public:
         }
 
         auto metaFlags = std::string(
-            "--write-thumbnail --write-info-json "
-            "--embed-metadata --convert-thumbnails jpg ");
+            "--embed-thumbnail --embed-metadata --convert-thumbnails jpg ");
 
-        auto cmd = audioOnly
-            ? std::format(
-                "yt-dlp -x --audio-format mp3 --audio-quality 0 "
-                "{}"
-                "--quiet -o '{}/%(title)s [%(id)s].%(ext)s' '{}'",
-                metaFlags, dir, url)
-            : std::format(
-                "yt-dlp --remux-video mp4 --format '{}' "
-                "{}"
-                "--quiet -o '{}/%(title)s [%(id)s].%(ext)s' '{}'",
-                fmtCode, metaFlags, dir, url);
+        // Use ffmpeg to merge separate streams into a single clean file
+        auto mergeFlag = audioOnly ? "" : "--merge-output-format mp4 ";
+
+        auto cmd = std::format(
+            "yt-dlp -f '{}' {}"
+            "{}"
+            "--quiet -o '{}/%(title)s [%(id)s].%(ext)s' '{}'",
+            fmtCode, mergeFlag, metaFlags, dir, url);
 
         auto result = detail::exec(cmd);
         if (!result.hasValue()) {
@@ -712,8 +780,7 @@ public:
 
         auto cmd = std::format(
             "yt-dlp -x --audio-format mp3 --audio-quality 0 "
-            "--write-thumbnail --write-info-json "
-            "--embed-metadata --embed-thumbnail --convert-thumbnails jpg "
+            "--embed-thumbnail --embed-metadata --convert-thumbnails jpg "
             "--quiet -o '{}/%(title)s [%(id)s].%(ext)s' '{}'",
             dir, url);
 
@@ -762,22 +829,17 @@ public:
         }
 
         auto metaFlags = std::string(
-            "--write-thumbnail --write-info-json "
-            "--embed-metadata --convert-thumbnails jpg ");
+            "--embed-thumbnail --embed-metadata --convert-thumbnails jpg ");
 
-        auto cmd = audioOnly
-            ? std::format(
-                "yt-dlp -x --audio-format mp3 --audio-quality 0 "
-                "--batch-file '{}' "
-                "{}"
-                "--quiet -o '{}/%(title)s [%(id)s].%(ext)s'",
-                plPath, metaFlags, dir)
-            : std::format(
-                "yt-dlp --remux-video mp4 --format '{}' "
-                "--batch-file '{}' "
-                "{}"
-                "--quiet -o '{}/%(title)s [%(id)s].%(ext)s'",
-                fmtCode, plPath, metaFlags, dir);
+        auto mergeFlag = audioOnly ? "" : "--merge-output-format mp4 ";
+        auto audioFlag = audioOnly ? "-x --audio-format mp3 --audio-quality 0 " : "";
+
+        auto cmd = std::format(
+            "yt-dlp -f '{}' {}"
+            "--batch-file '{}' "
+            "{}"
+            "--quiet -o '{}/%(title)s [%(id)s].%(ext)s'",
+            fmtCode, mergeFlag, plPath, audioFlag + metaFlags, dir);
 
         auto result = detail::exec(cmd);
         std::filesystem::remove(plPath);
