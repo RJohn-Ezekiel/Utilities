@@ -129,6 +129,9 @@ public:
     /// Save the current queue as a named playlist.
     Result<void> saveQueueAsPlaylist(std::string_view name);
 
+    /// Add a single video to an existing playlist.
+    Result<void> addToPlaylist(std::string_view name, const Video& video);
+
     /// Delete a saved playlist by name.
     Result<void> deletePlaylist(std::string_view name);
 

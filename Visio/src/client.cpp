@@ -627,7 +627,7 @@ public:
             "https://www.youtube.com/{}/videos", path);
 
         auto cmd = std::format(
-            "yt-dlp --flat-playlist --dump-json{} "
+            "yt-dlp --flat-playlist --dump-json{} --no-warnings "
             "--playlist-end {} '{}'",
             jsRuntimeFlag(), limit, url);
 
@@ -1176,6 +1176,32 @@ public:
         return Result<void>{};
     }
 
+    Result<void> addToPlaylist(std::string_view name, const Video& video)
+    {
+        auto plDir = detail::configDir() + "/playlists";
+        auto path = plDir + "/" + std::string(name) + ".json";
+
+        auto existing = readJsonFile(path);
+        json data = existing.has_value() ? *existing : json::array();
+
+        data.push_back({
+            {"id", video.id},
+            {"title", video.title},
+            {"author", video.author},
+            {"duration", video.duration},
+            {"views", video.views},
+            {"published", video.published},
+            {"thumbnail", video.thumbnail},
+        });
+
+        if (!writeJsonFile(path, data)) {
+            return Result<void>(Error(
+                ErrorCode::PlaylistError,
+                "failed to add to playlist"));
+        }
+        return Result<void>{};
+    }
+
     Result<void> deletePlaylist(std::string_view name)
     {
         auto path = detail::configDir() + "/playlists/" +
@@ -1357,6 +1383,11 @@ Result<std::vector<Video>> Client::loadPlaylist(
 Result<void> Client::saveQueueAsPlaylist(std::string_view name)
 {
     return m_impl->saveQueueAsPlaylist(name);
+}
+
+Result<void> Client::addToPlaylist(std::string_view name, const Video& video)
+{
+    return m_impl->addToPlaylist(name, video);
 }
 
 Result<void> Client::deletePlaylist(std::string_view name)

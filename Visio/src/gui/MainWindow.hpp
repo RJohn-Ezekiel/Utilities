@@ -34,6 +34,7 @@ private slots:
     void onDownloadMp3();
     void onDownloadPlaylist();
     void onAddToQueue();
+    void onAddToPlaylist();
     void onClearHistory();
     void onClearQueue();
     void onRemoveFromHistory();

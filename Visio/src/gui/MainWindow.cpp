@@ -264,6 +264,11 @@ void MainWindow::setupUi()
     connect(m_queueBtn, &QPushButton::clicked, this, &MainWindow::onAddToQueue);
     bottomRow->addWidget(m_queueBtn);
 
+    auto* playlistAddBtn = new QPushButton("+ Playlist", this);
+    playlistAddBtn->setToolTip("Add current video to an existing playlist");
+    connect(playlistAddBtn, &QPushButton::clicked, this, &MainWindow::onAddToPlaylist);
+    bottomRow->addWidget(playlistAddBtn);
+
     m_subscribeBtn = new QPushButton("Subscribe", this);
     connect(m_subscribeBtn, &QPushButton::clicked, this, &MainWindow::onSubscribe);
     bottomRow->addWidget(m_subscribeBtn);
@@ -589,6 +594,35 @@ void MainWindow::onAddToQueue()
     populateQueue();
 }
 
+void MainWindow::onAddToPlaylist()
+{
+    if (m_currentVideo.id.empty()) return;
+
+    auto playlists = m_client.listPlaylists();
+    if (!playlists.hasValue() || playlists.value().empty()) {
+        setStatus("No playlists exist. Save the Queue as a playlist first.");
+        return;
+    }
+
+    QStringList names;
+    for (const auto& p : playlists.value()) {
+        names << QString::fromStdString(p);
+    }
+
+    bool ok = false;
+    auto chosen = QInputDialog::getItem(this, "Add to Playlist",
+        "Choose a playlist:", names, 0, false, &ok);
+    if (!ok || chosen.isEmpty()) return;
+
+    setStatus(QString::fromStdString(std::format("Adding to playlist '{}'...", chosen.toStdString())));
+    auto result = m_client.addToPlaylist(chosen.toStdString(), m_currentVideo);
+    if (result.hasValue()) {
+        setStatus(QString::fromStdString(std::format("Added to '{}'", chosen.toStdString())));
+    } else {
+        setStatus(QString::fromStdString(std::format("Failed: {}", result.error().message())));
+    }
+}
+
 void MainWindow::onClearHistory()
 {
     m_client.clearHistory();
@@ -826,6 +860,7 @@ void MainWindow::onHelp()
         "<li><b>Download</b> — Save video to disk (select quality/format)</li>"
         "<li><b>Add to Queue</b> — Add video to the playback queue</li>"
         "<li><b>Subscribe</b> — Subscribe to the current video's channel</li>"
+        "<li><b>+ Playlist</b> — Add the current video to an existing playlist</li>"
         "</ul>"
         "<h3>Tabs</h3>"
         "<ul>"
