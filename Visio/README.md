@@ -2,34 +2,31 @@
 
 ![screenshot](demo.png)
 
-A cross-platform desktop YouTube browser — search, stream, and download videos with a full dark-theme Qt 6 GUI. Based on the same workflow as the [ytsurf](https://github.com/Stan-breaks/ytsurf) TUI.
+A cross-platform desktop YouTube browser — search, stream, and download videos with a greyscale dark-theme Qt 6 GUI.
 
 Built with **C++20** and **Qt 6**.
 
 ## Features
 
-- **Search** — search YouTube, click any result to see title, author, duration, views, and thumbnail
+- **Search** — search YouTube; click any result to see title, author, duration, views, and thumbnail
 - **Play** — stream videos in mpv with quality selection (Best, 720p, 1080p, 2160p, Audio Only)
 - **Download** — save videos or audio to your chosen directory
-- **History** — automatic watch history with remove and clear
-- **Queue** — build a playback queue, save it as a named playlist
+- **History** — automatic watch history with remove-selected and clear
+- **Queue** — build a playback queue; save it as a named playlist
 - **Playlists** — save, load, and delete named playlists
-- **Subscriptions** — subscribe to channels by search, view your feed
-- **Dark theme** — full Qt dark palette shared with Chronos, Codex, and Logos
+- **Subscriptions** — subscribe to channels by search, view their videos and your feed
+- **Video Info** — modal dialog with description, ID, and watch link
+- **Greyscale dark theme** — uniform grey palette shared with Chronos, Codex, Logos, and Phonio
 
 ## Usage
 
 ```
-visio_gui                        Launch GUI
+visio                            Launch GUI (installed)
+./build/visio_gui                Launch GUI (from build dir)
+visio.sh <query>                 Shell client (no Qt needed)
 ```
 
 Type a query in the search bar and press Enter. Click a result to see its details, then **Play**, **Download**, or **Add to Queue**. Use the tabs to browse **History**, **Queue**, **Subs**, and **Playlists**.
-
-### Shortcuts / Tips
-
-- **Search channels**: Open the **Subs** tab, click **Search Channels**, enter a name, pick from the list
-- **Quality**: Select a quality preset from the dropdown before playing or downloading
-- **Playlist**: Save your queue as a playlist, then open it later from the **Playlists** tab
 
 ## Build from source
 
@@ -60,19 +57,22 @@ sudo dnf install gcc-c++ cmake qt6-qtbase-devel curl yt-dlp mpv
 
 # Arch Linux
 sudo pacman -S base-devel cmake qt6-base curl yt-dlp mpv
+
+# openSUSE
+sudo zypper install gcc-c++ cmake qt6-base-devel curl yt-dlp mpv
 ```
 
 ### Build
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/RJohn-Ezekiel/Utilities.git
 cd Utilities/Visio
 
-cmake -S . -B build
-cmake --build build
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build -j$(nproc)
 ```
 
-> CMake detects Qt 6 automatically on most systems.  
+> CMake detects Qt 6 automatically on most systems.
 > If Qt 6 is installed in a custom path, add `-DCMAKE_PREFIX_PATH=/path/to/qt6`.
 
 ### Run
@@ -84,41 +84,19 @@ cmake --build build
 ### Run tests (optional)
 
 ```bash
+cmake -S . -B build -DVISIO_BUILD_TESTS=ON
+cmake --build build -j$(nproc)
 ./build/visio_tests
 ```
 
 ## Project Structure
 
 ```
-include/visio/
-├── client.hpp       — Main Client class (PIMPL)
-├── error.hpp        — Result<T>, Error, VisioException
-├── types.hpp        — Video, Channel, Playlist structs
-├── search.hpp       — Search URL builders and parsers
-├── video.hpp        — VideoUtils (ID extraction, metadata)
-├── channel.hpp      — ChannelUtils (videos, parsing)
-├── playlist.hpp     — PlaylistUtils (save, load, list)
-└── ui/
-    └── Theme.h      — Qt dark palette (constexpr QColor) + full stylesheet
-
-src/
-├── client.cpp       — Full implementation of Client
-├── search.cpp, video.cpp, channel.cpp, playlist.cpp
-├── http_util.hpp    — Internal subprocess + JSON extraction
-└── gui/
-    ├── main.cpp          — QApplication entry point
-    ├── MainWindow.hpp    — Main window header
-    └── MainWindow.cpp    — Full GUI implementation
-
-tests/
-├── test_client.cpp
-├── test_search.cpp
-└── test_types.cpp
-
-examples/
-├── search_example.cpp
-├── video_info_example.cpp
-└── queue_playlist_example.cpp
+include/visio/       Public headers — Client (PIMPL), error, types, search, video, channel, playlist, ui/Theme.h
+src/                 Implementation — client, parsers, http_util (subprocess), gui/ (MainWindow)
+tests/               test_client, test_search, test_types
+examples/            search, video_info, queue_playlist examples
+visio.sh             Bash shell client (works without Qt)
 ```
 
 ## Install
@@ -126,30 +104,32 @@ examples/
 ### Quick (via install script)
 
 ```bash
-git clone https://github.com/RJohn-Ezekiel/Utilities.git
 cd Utilities/Visio
-chmod +x install.sh
 ./install.sh
 ```
+
+Installs the library to `~/.local/include` + `~/.local/lib` and the GUI to `~/.local/bin/visio`. Set `PREFIX` to change the location (default `~/.local`).
 
 ### Manual
 
 1. Build (see [Build from source](#build-from-source))
-2. Copy `build/visio_gui` to `~/.local/bin/visio`
+2. Copy `build/visio_gui` to `~/.local/bin/visio.bin`
+3. Create `~/.local/bin/visio` wrapper:
+   ```bash
+   cat > ~/.local/bin/visio << 'EOF'
+   #!/bin/bash
+   export QT_LOGGING_RULES="kf.*.warning=false"
+   export QT_QPA_PLATFORMTHEME=""
+   exec "$0.bin" "$@"
+   EOF
+   chmod +x ~/.local/bin/visio
+   ```
+4. Ensure `~/.local/bin` is in your `PATH` (add `export PATH="$HOME/.local/bin:$PATH"` to `~/.bashrc` or `~/.zshrc`)
 
 ### Uninstall
 
 ```bash
-rm -f ~/.local/bin/visio ~/.local/bin/visio_gui
-```
-
-## CLI (Visio shell client)
-
-A bash-based terminal client is included as `visio.sh` for use without Qt:
-
-```bash
-./visio.sh "lofi beats"
-./visio.sh --help
+rm -f ~/.local/bin/visio ~/.local/bin/visio.bin
 ```
 
 ## License

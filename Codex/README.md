@@ -2,7 +2,7 @@
 
 ![screenshot](demo.png)
 
-An offline-first Markdown knowledge base with vault-based note management, full-text search, wiki links, backlinks, tags, export, and a dark theme GUI.
+An offline-first Markdown knowledge base with vault-based note management, full-text search, wiki links, backlinks, tags, export, and a greyscale dark-theme GUI.
 
 Built with **C++20** and **Qt 6**.
 
@@ -20,9 +20,9 @@ Built with **C++20** and **Qt 6**.
 - **Export** — single notes or entire vault to HTML, Markdown, or Plain Text
 - **Trash** — deleted notes are moved to Trash (restorable)
 - **Security** — optional vault password with SHA-256 hashing
-- **Dark theme** — full dark UI with JetBrains Mono font
 - **Reading view** — toggle between source and preview with `F5`
 - **Autosave** — saves automatically every 3 seconds
+- **Greyscale dark theme** — full grey UI with JetBrains Mono font
 
 ## Usage
 
@@ -68,14 +68,17 @@ sudo zypper install gcc-c++ cmake qt6-base-devel
 ### Build
 
 ```bash
-git clone <repository-url>
-cd Personal-Utilities/Codex
+git clone https://github.com/RJohn-Ezekiel/Utilities.git
+cd Utilities/Codex
 
-cmake -S . -B build
-cmake --build build
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build -j$(nproc)
 ```
 
 The binary is placed at `build/bin/codex`.
+
+> CMake detects Qt 6 automatically on most systems.
+> If Qt 6 is installed in a custom path, add `-DCMAKE_PREFIX_PATH=/path/to/qt6`.
 
 ### Run
 
@@ -89,45 +92,18 @@ Or point to an existing vault:
 ./build/bin/codex ~/my-vault
 ```
 
-### Run tests (optional)
+## Project Structure
 
-```bash
-cmake -B build -DCODEX_BUILD_TESTS=ON
-cmake --build build
-./build/tests/test_codex
 ```
-
-## Install
-
-### Quick (via install script)
-
-```bash
-git clone https://github.com/RJohn-Ezekiel/Utilities.git
-cd Utilities/Codex
-chmod +x install.sh
-./install.sh
-```
-
-### Manual
-
-1. Build (see [Build from source](#build-from-source))
-2. Copy `build/bin/codex` to `~/.local/bin/codex.bin`
-3. Create `~/.local/bin/codex` wrapper:
-   ```bash
-   cat > ~/.local/bin/codex << 'EOF'
-   #!/bin/bash
-   export QT_LOGGING_RULES="kf.*.warning=false"
-   export QT_QPA_PLATFORMTHEME=""
-   exec "$0.bin" "$@"
-   EOF
-   chmod +x ~/.local/bin/codex
-   ```
-4. Ensure `~/.local/bin` is in your `PATH`
-
-### Uninstall
-
-```bash
-rm -f ~/.local/bin/codex ~/.local/bin/codex.bin
+src/
+├── main.cpp
+├── cli/           — CLI argument parsing
+├── core/          — Vault manager, config, utilities
+├── index/         — Full-text search index
+├── markdown/      — Markdown parser and renderer
+├── export/        — HTML / Markdown / Plain Text export
+├── media/         — Drag-and-drop media handling
+└── ui/            — MainWindow, editor, tags, highlighting
 ```
 
 ## Vault Layout
@@ -149,4 +125,37 @@ MyVault/
     ├── backlinks.json
     ├── tags.json
     └── search_index.json
+```
+
+## Install
+
+### Quick (via install script)
+
+```bash
+cd Utilities/Codex
+./install.sh
+```
+
+Installs the binary to `~/.local/bin/codex`. Pass a directory to change the location (default `~/.local/bin`).
+
+### Manual
+
+1. Build (see [Build from source](#build-from-source))
+2. Copy `build/bin/codex` to `~/.local/bin/codex.bin`
+3. Create `~/.local/bin/codex` wrapper:
+   ```bash
+   cat > ~/.local/bin/codex << 'EOF'
+   #!/bin/bash
+   export QT_LOGGING_RULES="kf.*.warning=false"
+   export QT_QPA_PLATFORMTHEME=""
+   exec "$0.bin" "$@"
+   EOF
+   chmod +x ~/.local/bin/codex
+   ```
+4. Ensure `~/.local/bin` is in your `PATH` (add `export PATH="$HOME/.local/bin:$PATH"` to `~/.bashrc` or `~/.zshrc`)
+
+### Uninstall
+
+```bash
+rm -f ~/.local/bin/codex ~/.local/bin/codex.bin
 ```

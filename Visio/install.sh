@@ -56,6 +56,19 @@ cmake --install "$BUILD_DIR" --prefix "$PREFIX" 2>/dev/null || {
     echo "Installed manually."
 }
 
+# Install GUI binary (as `visio` with a wrapper, like the other apps)
+BIN_DIR="$PREFIX/bin"
+mkdir -p "$BIN_DIR"
+cp "$BUILD_DIR/visio_gui" "$BIN_DIR/visio.bin"
+
+cat > "$BIN_DIR/visio" << 'SCRIPT'
+#!/bin/bash
+export QT_LOGGING_RULES="kf.*.warning=false"
+export QT_QPA_PLATFORMTHEME=""
+exec "$0.bin" "$@"
+SCRIPT
+chmod +x "$BIN_DIR/visio"
+
 echo ""
 echo "=== Done ==="
 echo "Library:  $PREFIX/lib/libvisio.a"

@@ -15,7 +15,7 @@ Built with **C++20** and **Qt 6**.
 - **Notes** per passage — save, edit, and delete
 - **Random** and **daily verse** at one click
 - **Tabbed** navigation for multiple passages
-- **Dark theme** throughout
+- **Greyscale dark theme** throughout
 
 ## Usage
 
@@ -58,23 +58,15 @@ sudo zypper install gcc-c++ cmake qt6-base-devel
 ### Build
 
 ```bash
-git clone <repository-url>
-cd Personal-Utilities/Logos
+git clone https://github.com/RJohn-Ezekiel/Utilities.git
+cd Utilities/Logos
 
-cmake -S . -B build
-cmake --build build
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build -j$(nproc)
 ```
 
-> CMake detects Qt 6 automatically on most systems.  
+> CMake detects Qt 6 automatically on most systems.
 > If Qt 6 is installed in a custom path, add `-DCMAKE_PREFIX_PATH=/path/to/qt6`.
-
-### Install (optional)
-
-```bash
-sudo cmake --install build
-```
-
-This copies the binary to `/usr/local/bin` and data to `/usr/local/share/logos/`.
 
 ### Run
 
@@ -85,30 +77,34 @@ This copies the binary to `/usr/local/bin` and data to `/usr/local/share/logos/`
 ### Run tests (optional)
 
 ```bash
-cmake -B build -DBUILD_TESTS=ON
+cmake -S . -B build -DBUILD_TESTS=ON
 cmake --build build -j$(nproc)
-./build/tests/test_logos
+./build/tests/test_bible_explorer
 ```
 
-## Data
+## Project Structure
 
-Built-in translations are in `Bibles/`:
-
-| File          | Translation              |
-|---------------|--------------------------|
-| `kjv.json`    | King James Version       |
-| `vulg.json`   | Latin Vulgate            |
+```
+src/
+├── main.cpp
+├── cli/           — CLI argument parsing
+├── data/          — Translation loading (JSON bibles)
+├── services/      — Reference parser, search, verse service
+├── storage/       — Bookmarks, history, notes persistence
+├── core/          — Domain types
+└── ui/            — MainWindow, reader pane, sidebar, notes, settings
+```
 
 ## Install
 
 ### Quick (via install script)
 
 ```bash
-git clone https://github.com/RJohn-Ezekiel/Utilities.git
 cd Utilities/Logos
-chmod +x install.sh
 ./install.sh
 ```
+
+Installs the binary to `~/.local/bin/logos`. Pass a directory to change the location (default `~/.local/bin`).
 
 ### Manual
 
@@ -131,3 +127,7 @@ chmod +x install.sh
 ```bash
 rm -f ~/.local/bin/logos ~/.local/bin/logos.bin
 ```
+
+## License
+
+GNU General Public License v3.0.

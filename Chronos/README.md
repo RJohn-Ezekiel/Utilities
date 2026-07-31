@@ -11,16 +11,17 @@ Built with **C++20** and **Qt 6**.
 - **Focus Timer** — Pomodoro-style sessions with configurable focus and break durations
 - **Task Management** — create tasks and start focus sessions tied to them
 - **Health Reminders** — periodic reminders to drink water, stand, stretch, and rest your eyes
-- **Statistics & History** — track total focus time, sessions completed, daily streaks
+- **Statistics & History** — total focus time, sessions completed, daily streaks
 - **Mini Mode** — compact always-on-top window for minimal distraction
 - **Notifications** — toast notifications and sound alerts at session boundaries
 - **Water Meter** — visual hydration tracker
-- **Dark theme** throughout
+- **Greyscale dark theme** throughout
 
 ## Usage
 
 ```
 chronos                         Launch GUI
+chronos --stats                 Display today's statistics and exit
 chronos --help                  Display help
 chronos --version               Show version
 ```
@@ -64,25 +65,28 @@ sudo zypper install gcc-c++ cmake qt6-base-devel qt6-multimedia-devel
 ### Build
 
 ```bash
-git clone <repository-url>
-cd Personal-Utilities/Chronos
+git clone https://github.com/RJohn-Ezekiel/Utilities.git
+cd Utilities/Chronos
 
-cmake -S . -B build
-cmake --build build
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build -j$(nproc)
 ```
+
+> CMake detects Qt 6 automatically on most systems.
+> If Qt 6 is installed in a custom path, add `-DCMAKE_PREFIX_PATH=/path/to/qt6`.
 
 ### Run
 
 ```bash
-./build/chronos
+./build/src/chronos
 ```
 
 ### Run tests (optional)
 
 ```bash
-cmake -B build -DBUILD_TESTS=ON
+cmake -S . -B build -DBUILD_TESTS=ON
 cmake --build build -j$(nproc)
-./build/tests/test_chronos
+./build/tests/test_timer_engine
 ```
 
 ## Project Structure
@@ -103,11 +107,11 @@ src/
 ### Quick (via install script)
 
 ```bash
-git clone https://github.com/RJohn-Ezekiel/Utilities.git
 cd Utilities/Chronos
-chmod +x install.sh
 ./install.sh
 ```
+
+Installs the binary to `~/.local/bin/chronos`. Pass a directory to change the location (default `~/.local/bin`).
 
 ### Manual
 
@@ -123,7 +127,7 @@ chmod +x install.sh
    EOF
    chmod +x ~/.local/bin/chronos
    ```
-4. Ensure `~/.local/bin` is in your `PATH`
+4. Ensure `~/.local/bin` is in your `PATH` (add `export PATH="$HOME/.local/bin:$PATH"` to `~/.bashrc` or `~/.zshrc`)
 
 ### Uninstall
 
@@ -133,4 +137,4 @@ rm -f ~/.local/bin/chronos ~/.local/bin/chronos.bin
 
 ## License
 
-MIT
+MIT — see [`LICENSE`](LICENSE).

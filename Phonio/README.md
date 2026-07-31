@@ -1,7 +1,8 @@
 # Phonio
 
-A minimalist, greyscale desktop music player for Linux with an offline music
-library, dedicated Now Playing experience, and full metadata support.
+![screenshot](demo.png)
+
+A minimalist, greyscale desktop music player for Linux with an offline music library, dedicated Now Playing experience, and full metadata support.
 
 Built with **C++20** and **Qt 6**.
 
@@ -56,8 +57,8 @@ sudo zypper install gcc-c++ cmake qt6-base-devel qt6-multimedia-devel taglib-dev
 ### Build
 
 ```bash
-git clone <repository-url>
-cd Personal-Utilities/Phonio
+git clone https://github.com/RJohn-Ezekiel/Utilities.git
+cd Utilities/Phonio
 
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build -j$(nproc)
@@ -65,15 +66,6 @@ cmake --build build -j$(nproc)
 
 > CMake detects Qt 6 automatically on most systems.
 > If Qt 6 is installed in a custom path, add `-DCMAKE_PREFIX_PATH=/path/to/qt6`.
-
-### Install (optional)
-
-```bash
-sudo cmake --install build
-```
-
-This copies the binary to `/usr/local/bin` and the desktop entry to
-`/usr/local/share/applications/`.
 
 ### Run
 
@@ -89,19 +81,54 @@ cmake --build build -j$(nproc)
 ctest --test-dir build --output-on-failure
 ```
 
-## Architecture
+## Project Structure
 
 ```
-app/        App — dependency wiring (constructor injection, no globals)
-core/       Domain types (Track, PlaylistInfo)
-database/   SQLite schema + persistence
-settings/   QSettings-backed preferences
-metadata/   TagLib read/write of tags + embedded artwork
-artwork/    Artwork resolution with layered fallback + disk cache
-library/    Background scanner + in-memory library model
-lyrics/     LRC parser, lyrics manager, synchronized lyrics widget
-player/     AudioPlayer (QMediaPlayer wrapper) + PlaybackController
-queue/      Persistent playback queue
-playlists/  Playlist CRUD
-ui/         MainWindow, pages, models, dialogs, theming
+src/
+├── main.cpp
+├── app/        App — dependency wiring (constructor injection, no globals)
+├── core/       Domain types (Track, PlaylistInfo)
+├── database/   SQLite schema + persistence
+├── settings/   QSettings-backed preferences
+├── metadata/   TagLib read/write of tags + embedded artwork
+├── artwork/    Artwork resolution with layered fallback + disk cache
+├── library/    Background scanner + in-memory library model
+├── lyrics/     LRC parser, lyrics manager, synchronized lyrics widget
+├── player/     AudioPlayer (QMediaPlayer wrapper) + PlaybackController
+├── queue/      Persistent playback queue
+├── playlists/  Playlist CRUD
+└── ui/         MainWindow, pages, models, dialogs, theming
+```
+
+## Install
+
+### Quick (via install script)
+
+```bash
+cd Utilities/Phonio
+./install.sh
+```
+
+Installs the binary to `~/.local/bin/phonio`. Pass a directory to change the location (default `~/.local/bin`).
+
+### Manual
+
+1. Build (see [Build from source](#build-from-source))
+2. Copy `build/phonio` to `~/.local/bin/phonio.bin`
+3. Create `~/.local/bin/phonio` wrapper:
+   ```bash
+   cat > ~/.local/bin/phonio << 'EOF'
+   #!/bin/bash
+   export QT_LOGGING_RULES="kf.*.warning=false"
+   export QT_QPA_PLATFORMTHEME=""
+   exec "$0.bin" "$@"
+   EOF
+   chmod +x ~/.local/bin/phonio
+   ```
+4. Ensure `~/.local/bin` is in your `PATH` (add `export PATH="$HOME/.local/bin:$PATH"` to `~/.bashrc` or `~/.zshrc`)
+
+### Uninstall
+
+```bash
+rm -f ~/.local/bin/phonio ~/.local/bin/phonio.bin
 ```
