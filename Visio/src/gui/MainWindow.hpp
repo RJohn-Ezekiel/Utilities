@@ -16,6 +16,8 @@
 
 #include <visio/client.hpp>
 
+class QNetworkAccessManager;
+
 namespace visio {
 
 class MainWindow : public QMainWindow
@@ -37,8 +39,8 @@ private slots:
     void onAddToPlaylist();
     void onClearHistory();
     void onClearQueue();
-    void onRemoveFromHistory();
-    void onRemoveFromQueue();
+    void onRemoveSelected();
+    void onShowInfo();
     void onSaveQueue();
     void onLoadPlaylist();
     void onDeletePlaylist();
@@ -98,6 +100,9 @@ private:
     QPushButton* m_loadPlaylistBtn{};
     QPushButton* m_deletePlaylistBtn{};
     QComboBox* m_qualitySelector{};
+
+    QNetworkAccessManager* m_thumbnailManager{};
+    QString m_thumbnailUrl;
 
     Video m_currentVideo;
     std::vector<Video> m_currentResults;

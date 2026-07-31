@@ -117,6 +117,9 @@ public:
     /// Clear the playback queue.
     void clearQueue();
 
+    /// Remove a single entry from the queue by index.
+    void removeQueueEntry(std::size_t index);
+
     // ---- Playlists ----
 
     /// List saved playlist names.

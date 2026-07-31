@@ -21,6 +21,12 @@ CliResult parseCommandLine(const QStringList& args)
         QStringLiteral("Display today's statistics and exit."));
     parser.addOption(statsOption);
 
+    QCommandLineOption screenshotOption(
+        QStringLiteral("screenshot"),
+        QStringLiteral("Save a PNG of the main window to <path> and exit."),
+        QStringLiteral("path"));
+    parser.addOption(screenshotOption);
+
     parser.process(args);
 
     CliResult result;

@@ -1,0 +1,8 @@
+build/
+build-*/
+*.user
+*.autosave
+.cache/
+compile_commands.json
+CMakeLists.txt.user
+rhythmbox-master/

@@ -366,8 +366,8 @@ std::string Parser::toHtml(const std::string &content) {
                     auto content = checked ? l.substr(1) : l;
                     // Use Unicode checkbox symbols (work in Qt rich text)
                     auto checkbox = checked
-                        ? "<span style=\"color:#6B8A9E;font-size:1.3em;\">\u2611</span>"
-                        : "<span style=\"color:#6B8A9E;font-size:1.3em;\">\u2610</span>";
+                        ? "<span style=\"color:#8A8A8A;font-size:1.3em;\">\u2611</span>"
+                        : "<span style=\"color:#8A8A8A;font-size:1.3em;\">\u2610</span>";
                     html << "<li class=\"task-list-item\" style=\"list-style:none;\">"
                          << checkbox << " "
                          << inlineToHtml(escapeHtml(content))

@@ -65,5 +65,13 @@ int main(int argc, char* argv[])
     chronos::MainWindow window(timerSvc, taskSvc, statsSvc, reminders, notifSvc);
     window.show();
 
+    // Dev helper: render the window to a PNG and exit (used for visual checks).
+    const auto args = app.arguments();
+    const auto shotIdx = args.indexOf(QStringLiteral("--screenshot"));
+    if (shotIdx != -1 && shotIdx + 1 < args.size()) {
+        window.grab().save(args.at(shotIdx + 1));
+        return 0;
+    }
+
     return app.exec();
 }

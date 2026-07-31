@@ -484,9 +484,9 @@ std::string ExportManager::htmlTemplate() {
     margin: 0 auto;
     padding: 2.5em 1.5em;
   }
-  a { color: #6B8A9E; text-decoration: none; }
+  a { color: #8A8A8A; text-decoration: none; }
   a:hover { text-decoration: underline; }
-  h1, h2, h3, h4, h5, h6 { color: #6B8A9E; margin: 1.2em 0 0.5em; font-weight: 600; }
+  h1, h2, h3, h4, h5, h6 { color: #8A8A8A; margin: 1.2em 0 0.5em; font-weight: 600; }
   h1 { font-size: 2em; border-bottom: 1px solid #333; padding-bottom: 0.3em; }
   h2 { font-size: 1.6em; }
   h3 { font-size: 1.3em; }
@@ -512,7 +512,7 @@ std::string ExportManager::htmlTemplate() {
   ul.contains-task-list { list-style: none; padding-left: 0; }
   li.task-list-item { list-style: none; }
   blockquote {
-    border-left: 3px solid #6B8A9E;
+    border-left: 3px solid #8A8A8A;
     margin: 1em 0;
     padding: 0.5em 1em;
     background: #222;
@@ -520,7 +520,7 @@ std::string ExportManager::htmlTemplate() {
   }
   hr { border: none; border-top: 1px solid #333; margin: 1.5em 0; }
   img { max-width: 100%; border-radius: 4px; }
-  input[type=checkbox] { accent-color: #6B8A9E; margin-right: 0.5em; }
+  input[type=checkbox] { accent-color: #8A8A8A; margin-right: 0.5em; }
   s { color: #888; }
   u { text-decoration: underline; }
   .center, div[style*="text-align:center"] { text-align: center; }

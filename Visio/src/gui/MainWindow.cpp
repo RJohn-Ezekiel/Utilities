@@ -17,11 +17,28 @@
 #include <QUrl>
 #include <QFont>
 #include <QScrollArea>
+#include <QDialog>
 
 #include <thread>
 #include <format>
+#include <functional>
 
 namespace visio {
+
+namespace {
+
+QString formatViews(std::uint64_t views)
+{
+    if (views >= 1'000'000'000)
+        return QString::fromStdString(std::format("{:.1f}B", views / 1'000'000'000.0));
+    if (views >= 1'000'000)
+        return QString::fromStdString(std::format("{:.1f}M", views / 1'000'000.0));
+    if (views >= 1'000)
+        return QString::fromStdString(std::format("{:.1f}K", views / 1'000.0));
+    return QString::number(views);
+}
+
+} // namespace
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
@@ -57,42 +74,29 @@ void MainWindow::setupUi()
     leftLayout->setContentsMargins(0, 0, 0, 0);
 
     m_tabs = new QTabWidget(this);
+    m_thumbnailManager = new QNetworkAccessManager(this);
 
     m_searchResults = new QListWidget(this);
     m_searchResults->setAlternatingRowColors(false);
     connect(m_searchResults, &QListWidget::currentRowChanged,
             this, &MainWindow::onSearchResultClicked);
-    connect(m_searchResults, &QListWidget::itemClicked,
-            this, [this](QListWidgetItem* item) {
-                onSearchResultClicked(m_searchResults->row(item));
-            });
     m_tabs->addTab(m_searchResults, "Search");
 
     m_historyList = new QListWidget(this);
+    m_historyList->setSelectionMode(QAbstractItemView::ExtendedSelection);
     connect(m_historyList, &QListWidget::currentRowChanged,
             this, &MainWindow::onHistoryClicked);
-    connect(m_historyList, &QListWidget::itemClicked,
-            this, [this](QListWidgetItem* item) {
-                onHistoryClicked(m_historyList->row(item));
-            });
     m_tabs->addTab(m_historyList, "History");
 
     m_queueList = new QListWidget(this);
+    m_queueList->setSelectionMode(QAbstractItemView::ExtendedSelection);
     connect(m_queueList, &QListWidget::currentRowChanged,
             this, &MainWindow::onQueueClicked);
-    connect(m_queueList, &QListWidget::itemClicked,
-            this, [this](QListWidgetItem* item) {
-                onQueueClicked(m_queueList->row(item));
-            });
     m_tabs->addTab(m_queueList, "Queue");
 
     m_subList = new QListWidget(this);
     connect(m_subList, &QListWidget::currentRowChanged,
             this, &MainWindow::onSubClicked);
-    connect(m_subList, &QListWidget::itemClicked,
-            this, [this](QListWidgetItem* item) {
-                onSubClicked(m_subList->row(item));
-            });
     connect(m_subList, &QListWidget::itemSelectionChanged,
             this, [this]() {
                 m_unsubscribeBtn->setEnabled(!m_subList->selectedItems().isEmpty());
@@ -120,21 +124,14 @@ void MainWindow::setupUi()
     auto* historyBar = new QHBoxLayout();
     m_clearHistoryBtn = new QPushButton("Clear History", this);
     connect(m_clearHistoryBtn, &QPushButton::clicked, this, &MainWindow::onClearHistory);
-    auto* historyToQueueBtn = new QPushButton("Add All to Queue", this);
-    historyToQueueBtn->setToolTip("Add all history items to the playback queue");
-    connect(historyToQueueBtn, &QPushButton::clicked, this, [this]() {
-        auto history = m_client.getHistory();
-        if (!history.hasValue() || history.value().empty()) {
-            setStatus("History is empty");
-            return;
-        }
-        for (const auto& v : history.value())
-            m_client.addToQueue(v);
-        populateQueue();
-        setStatus(QString::fromStdString(
-            std::format("Added {} videos from history to queue", history.value().size())));
-    });
-    historyBar->addWidget(historyToQueueBtn);
+    auto* historyInfoBtn = new QPushButton("Show Info", this);
+    historyInfoBtn->setToolTip("Show detailed info about the selected video");
+    connect(historyInfoBtn, &QPushButton::clicked, this, &MainWindow::onShowInfo);
+    auto* historyRemoveBtn = new QPushButton("Remove Selected", this);
+    historyRemoveBtn->setToolTip("Remove the selected item from history");
+    connect(historyRemoveBtn, &QPushButton::clicked, this, &MainWindow::onRemoveSelected);
+    historyBar->addWidget(historyRemoveBtn);
+    historyBar->addWidget(historyInfoBtn);
     historyBar->addWidget(m_clearHistoryBtn);
     leftLayout->addLayout(historyBar);
 
@@ -143,7 +140,8 @@ void MainWindow::setupUi()
     m_clearQueueBtn = new QPushButton("Clear Queue", this);
     connect(m_clearQueueBtn, &QPushButton::clicked, this, &MainWindow::onClearQueue);
     m_removeQueueBtn = new QPushButton("Remove Selected", this);
-    connect(m_removeQueueBtn, &QPushButton::clicked, this, &MainWindow::onRemoveFromQueue);
+    m_removeQueueBtn->setToolTip("Remove the selected item from the queue");
+    connect(m_removeQueueBtn, &QPushButton::clicked, this, &MainWindow::onRemoveSelected);
     m_saveQueueBtn = new QPushButton("Save as Playlist", this);
     connect(m_saveQueueBtn, &QPushButton::clicked, this, &MainWindow::onSaveQueue);
     queueBar->addWidget(m_removeQueueBtn);
@@ -213,7 +211,7 @@ void MainWindow::setupUi()
 
     auto* metaRow = new QHBoxLayout();
     m_durationLabel = new QLabel(this);
-    m_durationLabel->setStyleSheet("color: #7A8A9A;");
+    m_durationLabel->setStyleSheet("color: #8A8A8A;");
     m_viewsLabel = new QLabel(this);
     m_viewsLabel->setStyleSheet("color: #9E9E9E;");
     m_publishedLabel = new QLabel(this);
@@ -252,9 +250,9 @@ void MainWindow::setupUi()
 
     m_playBtn = new QPushButton("Play", this);
     m_playBtn->setStyleSheet(
-        "QPushButton { background-color: #7A8A9A; color: #1B1B1B; "
+        "QPushButton { background-color: #8A8A8A; color: #1B1B1B; "
         "font-weight: bold; padding: 8px 24px; border: none; border-radius: 4px; }"
-        "QPushButton:hover { background-color: #8A9AAA; }");
+        "QPushButton:hover { background-color: #9A9A9A; }");
     connect(m_playBtn, &QPushButton::clicked, this, &MainWindow::onPlay);
     topRow->addWidget(m_playBtn);
 
@@ -323,15 +321,15 @@ void MainWindow::setupToolbar()
         "QLineEdit { background-color: #333333; color: #D8D8D8; "
         "border: 1px solid #353535; border-radius: 4px; "
         "padding: 6px 12px; font-size: 14px; }"
-        "QLineEdit:focus { border-color: #7A8A9A; }");
+        "QLineEdit:focus { border-color: #8A8A8A; }");
     m_toolbar->addWidget(m_searchInput);
 
     m_searchBtn = new QPushButton("Search", this);
     m_searchBtn->setStyleSheet(
-        "QPushButton { background-color: #7A8A9A; color: #1B1B1B; "
+        "QPushButton { background-color: #8A8A8A; color: #1B1B1B; "
         "font-weight: bold; padding: 6px 20px; border: none; "
         "border-radius: 4px; }"
-        "QPushButton:hover { background-color: #8A9AAA; }");
+        "QPushButton:hover { background-color: #9A9A9A; }");
     connect(m_searchBtn, &QPushButton::clicked, this, &MainWindow::onSearch);
     connect(m_searchInput, &QLineEdit::returnPressed, this, &MainWindow::onSearch);
     m_toolbar->addWidget(m_searchBtn);
@@ -343,7 +341,7 @@ void MainWindow::setupToolbar()
         "QPushButton { background-color: #333333; color: #A9A9A9; "
         "padding: 6px 16px; border: 1px solid #353535; "
         "border-radius: 4px; }"
-        "QPushButton:hover { background-color: #3A3D41; color: #D8D8D8; }");
+        "QPushButton:hover { background-color: #3A3A3A; color: #D8D8D8; }");
     connect(helpBtn, &QPushButton::clicked, this, &MainWindow::onHelp);
     m_toolbar->addWidget(helpBtn);
 }
@@ -434,19 +432,8 @@ void MainWindow::populatePlaylists()
 
 QListWidgetItem* MainWindow::makeVideoItem(const Video& video)
 {
-    auto views = video.views;
-    std::string viewsStr;
-    if (views >= 1'000'000'000)
-        viewsStr = std::format("{:.1f}B", views / 1'000'000'000.0);
-    else if (views >= 1'000'000)
-        viewsStr = std::format("{:.1f}M", views / 1'000'000.0);
-    else if (views >= 1'000)
-        viewsStr = std::format("{:.1f}K", views / 1'000.0);
-    else
-        viewsStr = std::to_string(views);
-
     auto text = std::format("{}\n{}  ·  {}  ·  {} views",
-        video.title, video.author, video.duration, viewsStr);
+        video.title, video.author, video.duration, formatViews(video.views).toStdString());
     auto* item = new QListWidgetItem(QString::fromStdString(text));
     item->setData(Qt::UserRole, QString::fromStdString(video.id));
     item->setToolTip(QString::fromStdString(video.title));
@@ -466,41 +453,37 @@ void MainWindow::showVideoDetail(const Video& video)
     m_titleLabel->setText(QString::fromStdString(video.title));
     m_authorLabel->setText(QString::fromStdString(std::format("by {}", video.author)));
 
-    auto views = video.views;
-    std::string viewsStr;
-    if (views >= 1'000'000'000)
-        viewsStr = std::format("{:.1f}B", views / 1'000'000'000.0);
-    else if (views >= 1'000'000)
-        viewsStr = std::format("{:.1f}M", views / 1'000'000.0);
-    else if (views >= 1'000)
-        viewsStr = std::format("{:.1f}K", views / 1'000.0);
-    else
-        viewsStr = std::to_string(views);
-
     m_durationLabel->setText(QString::fromStdString(std::format("Duration: {}", video.duration)));
-    m_viewsLabel->setText(QString::fromStdString(std::format("{} views", viewsStr)));
+    m_viewsLabel->setText(formatViews(video.views) + " views");
     m_publishedLabel->setText(QString::fromStdString(video.published));
     m_description->setText(QString::fromStdString(video.description));
 
-    // Load thumbnail via network
+    // Load thumbnail via network (single shared manager, no re-fetch of the same URL)
+    m_thumbnail->clear();
     if (!video.thumbnail.empty()) {
-        auto* nam = new QNetworkAccessManager(this);
-        connect(nam, &QNetworkAccessManager::finished, this,
-            [this, nam](QNetworkReply* reply) {
-                if (reply->error() == QNetworkReply::NoError) {
-                    auto data = reply->readAll();
-                    QPixmap pix;
-                    if (pix.loadFromData(data)) {
-                        m_thumbnail->setPixmap(
-                            pix.scaled(m_thumbnail->width(), 140,
-                                       Qt::KeepAspectRatio,
-                                       Qt::SmoothTransformation));
-                    }
-                }
+        const auto url = QString::fromStdString(video.thumbnail);
+        if (url != m_thumbnailUrl) {
+            m_thumbnailUrl = url;
+            auto* reply = m_thumbnailManager->get(QNetworkRequest(QUrl(url)));
+            connect(reply, &QNetworkReply::finished, this, [this, reply, url]() {
                 reply->deleteLater();
-                nam->deleteLater();
+                if (reply->error() != QNetworkReply::NoError)
+                    return;
+                if (url != m_thumbnailUrl)
+                    return; // stale response from an older click
+                auto data = reply->readAll();
+                QPixmap pix;
+                if (pix.loadFromData(data)) {
+                    m_thumbnail->setPixmap(
+                        pix.scaled(m_thumbnail->width(), 140,
+                                   Qt::KeepAspectRatio,
+                                   Qt::SmoothTransformation));
+                }
             });
-        nam->get(QNetworkRequest(QUrl(QString::fromStdString(video.thumbnail))));
+        }
+    } else {
+        m_thumbnailUrl.clear();
+        m_thumbnail->setText("No thumbnail");
     }
 }
 
@@ -649,34 +632,157 @@ void MainWindow::onClearQueue()
     setStatus("Queue cleared");
 }
 
-void MainWindow::onRemoveFromHistory()
+void MainWindow::onRemoveSelected()
 {
-    auto items = m_historyList->selectedItems();
-    if (items.isEmpty()) return;
-    auto idx = m_historyList->row(items[0]);
-    m_client.removeHistoryEntry(static_cast<std::size_t>(idx));
-    populateHistory();
-    setStatus("Entry removed from history");
+    QListWidget* list = nullptr;
+    std::function<void(std::size_t)> removeAt;
+    QString what;
+
+    switch (m_tabs->currentIndex()) {
+    case 1:
+        list = m_historyList;
+        removeAt = [this](std::size_t i) { m_client.removeHistoryEntry(i); };
+        what = QStringLiteral("history");
+        break;
+    case 2:
+        list = m_queueList;
+        removeAt = [this](std::size_t i) { m_client.removeQueueEntry(i); };
+        what = QStringLiteral("queue");
+        break;
+    default:
+        setStatus("Select an item in History or Queue first");
+        return;
+    }
+
+    const auto items = list->selectedItems();
+    if (items.isEmpty()) {
+        setStatus(QStringLiteral("Select an item in %1 first").arg(what));
+        return;
+    }
+
+    QVector<int> rows;
+    rows.reserve(items.size());
+    for (const auto* item : items)
+        rows.append(list->row(item));
+    std::sort(rows.begin(), rows.end(), std::greater<int>());
+    for (const int row : rows)
+        removeAt(static_cast<std::size_t>(row));
+
+    if (m_tabs->currentIndex() == 1)
+        populateHistory();
+    else
+        populateQueue();
+
+    setStatus(QStringLiteral("Removed %1 entr%2 from %3")
+                  .arg(rows.size())
+                  .arg(rows.size() == 1 ? QLatin1String("y") : QLatin1String("ies"), what));
 }
 
-void MainWindow::onRemoveFromQueue()
+void MainWindow::onShowInfo()
 {
-    auto items = m_queueList->selectedItems();
-    if (items.isEmpty()) return;
+    Video video;
+    bool found = false;
 
-    // Re-read queue, find and remove matching id
-    auto videoId = items[0]->data(Qt::UserRole).toString().toStdString();
-    auto queue = m_client.getQueue();
-    if (!queue.hasValue()) return;
-
-    m_client.clearQueue();
-    for (const auto& v : queue.value()) {
-        if (v.id != videoId) {
-            m_client.addToQueue(v);
+    switch (m_tabs->currentIndex()) {
+    case 0: { // Search
+        const int row = m_searchResults->currentRow();
+        if (row >= 0 && row < static_cast<int>(m_currentResults.size())) {
+            video = m_currentResults[row];
+            found = true;
         }
+        break;
     }
-    populateQueue();
-    setStatus("Entry removed from queue");
+    case 1: { // History
+        const int row = m_historyList->currentRow();
+        auto history = m_client.getHistory();
+        if (row >= 0 && history.hasValue() && row < static_cast<int>(history.value().size())) {
+            video = history.value()[row];
+            found = true;
+        }
+        break;
+    }
+    case 2: { // Queue
+        const int row = m_queueList->currentRow();
+        auto queue = m_client.getQueue();
+        if (row >= 0 && queue.hasValue() && row < static_cast<int>(queue.value().size())) {
+            video = queue.value()[row];
+            found = true;
+        }
+        break;
+    }
+    default:
+        break;
+    }
+
+    if (!found) {
+        if (m_currentVideo.id.empty()) {
+            setStatus("No video selected");
+            return;
+        }
+        video = m_currentVideo;
+    }
+
+    auto* dialog = new QDialog(this);
+    dialog->setWindowTitle("Video Info");
+    dialog->setModal(true);
+    dialog->setMinimumWidth(460);
+    dialog->setMaximumWidth(640);
+
+    auto* layout = new QVBoxLayout(dialog);
+    layout->setContentsMargins(16, 16, 16, 16);
+    layout->setSpacing(8);
+
+    auto* title = new QLabel(QString::fromStdString(video.title), dialog);
+    auto tf = title->font();
+    tf.setPointSize(15);
+    tf.setBold(true);
+    title->setFont(tf);
+    title->setWordWrap(true);
+    layout->addWidget(title);
+
+    auto* meta = new QLabel(
+        QStringLiteral("by %1 · %2 · %3 · %4")
+            .arg(QString::fromStdString(video.author),
+                 QString::fromStdString(video.duration),
+                 formatViews(video.views),
+                 QString::fromStdString(video.published)),
+        dialog);
+    meta->setStyleSheet(QStringLiteral("color: #A9A9A9;"));
+    layout->addWidget(meta);
+
+    auto* idLabel = new QLabel(
+        QStringLiteral("Video ID: %1").arg(QString::fromStdString(video.id)), dialog);
+    idLabel->setStyleSheet(QStringLiteral("color: #8A8A8A; font-family: monospace;"));
+    layout->addWidget(idLabel);
+
+    const QString watchUrl = QString::fromStdString(VideoUtils::watchUrl(video.id));
+    auto* urlLabel = new QLabel(
+        QStringLiteral("<a href=\"%1\" style=\"color: #8A8A8A;\">%1</a>").arg(watchUrl), dialog);
+    urlLabel->setOpenExternalLinks(true);
+    urlLabel->setTextInteractionFlags(Qt::TextBrowserInteraction);
+    urlLabel->setWordWrap(true);
+    layout->addWidget(urlLabel);
+
+    auto* desc = new QTextEdit(dialog);
+    desc->setReadOnly(true);
+    desc->setPlainText(QString::fromStdString(video.description));
+    desc->setMaximumHeight(200);
+    layout->addWidget(desc);
+
+    auto* buttons = new QHBoxLayout();
+    auto* openBtn = new QPushButton("Open in Browser", dialog);
+    connect(openBtn, &QPushButton::clicked, dialog, [dialog, watchUrl]() {
+        QDesktopServices::openUrl(QUrl(watchUrl));
+    });
+    auto* closeBtn = new QPushButton("Close", dialog);
+    connect(closeBtn, &QPushButton::clicked, dialog, &QDialog::accept);
+    buttons->addStretch();
+    buttons->addWidget(openBtn);
+    buttons->addWidget(closeBtn);
+    layout->addLayout(buttons);
+
+    dialog->setAttribute(Qt::WA_DeleteOnClose);
+    dialog->open();
 }
 
 void MainWindow::onSaveQueue()
@@ -757,6 +863,13 @@ void MainWindow::onSubClicked(int row)
     QApplication::processEvents();
 
     auto videos = m_client.getChannelVideos(channelId, 30);
+    if (!videos.hasValue() && channelName.starts_with('@')) {
+        // Stored channel id may be stale/invalid — retry with the @handle.
+        setStatus(QString::fromStdString(
+            std::format("Channel id invalid, retrying with handle {}...", channelName)));
+        QApplication::processEvents();
+        videos = m_client.getChannelVideos(channelName, 30);
+    }
     if (!videos.hasValue()) {
         setStatus(QString::fromStdString(std::format("Failed to load channel: {}", videos.error().message())));
         return;
@@ -849,10 +962,11 @@ void MainWindow::onUnsubscribe()
 
 void MainWindow::onTabChanged(int index)
 {
-    if (index == 1) populateHistory();
-    else if (index == 2) populateQueue();
-    else if (index == 3) populateSubscriptions();
-    else if (index == 4) populatePlaylists();
+    // Lists are kept fresh by their mutations; only populate on first visit.
+    if (index == 1 && m_historyList->count() == 0) populateHistory();
+    else if (index == 2 && m_queueList->count() == 0) populateQueue();
+    else if (index == 3 && m_subList->count() == 0) populateSubscriptions();
+    else if (index == 4 && m_playlistList->count() == 0) populatePlaylists();
 }
 
 void MainWindow::onHelp()

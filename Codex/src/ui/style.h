@@ -7,17 +7,17 @@ namespace style {
 
 // Colour palette
 inline constexpr auto BG_PRIMARY    = "#1B1B1B";
-inline constexpr auto BG_SECONDARY  = "#252526";
+inline constexpr auto BG_SECONDARY  = "#252525";
 inline constexpr auto BG_TERTIARY   = "#2D2D2D";
 inline constexpr auto BG_INPUT      = "#333333";
 inline constexpr auto TEXT_PRIMARY  = "#D8D8D8";
 inline constexpr auto TEXT_SECONDARY = "#9E9E9E";
-inline constexpr auto ACCENT       = "#6B8A9E";
-inline constexpr auto ACCENT_HOVER = "#7FA0B5";
-inline constexpr auto BORDER       = "#3E3E3E";
-inline constexpr auto RED          = "#CC6666";
-inline constexpr auto GREEN        = "#6A9955";
-inline constexpr auto YELLOW       = "#DCDCAA";
+inline constexpr auto ACCENT       = "#8A8A8A";
+inline constexpr auto ACCENT_HOVER = "#9A9A9A";
+inline constexpr auto BORDER       = "#353535";
+inline constexpr auto RED          = "#B8B8B8";
+inline constexpr auto GREEN        = "#7A7A7A";
+inline constexpr auto YELLOW       = "#C2C2C2";
 
 inline QString appStyleSheet()
 {

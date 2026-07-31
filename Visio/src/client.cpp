@@ -623,6 +623,7 @@ public:
         auto path = channelId.starts_with('@')
             ? std::string(channelId)
             : std::string("channel/") + std::string(channelId);
+        std::erase(path, ' '); // handles like "@Clamavi De Profundis" -> "@ClamaviDeProfundis"
         auto url = std::format(
             "https://www.youtube.com/{}/videos", path);
 
@@ -651,7 +652,11 @@ public:
                 v.id = item.value("id", "");
                 v.title = item.value("title", "");
                 v.author = item.value("channel", item.value("uploader", ""));
-                v.duration = item.value("duration_string", item.value("duration", ""));
+                if (item.contains("duration_string")) {
+                    v.duration = item["duration_string"];
+                } else if (item.contains("duration")) {
+                    v.duration = std::to_string(item["duration"].get<int64_t>());
+                }
                 auto viewCount = item.value("view_count", 0ULL);
                 v.views = viewCount;
                 v.published = item.value("upload_date", "");
@@ -669,6 +674,11 @@ public:
             }
             if (static_cast<int>(videos.size()) >= limit) break;
             pos = nl == std::string::npos ? lines.size() : nl + 1;
+        }
+        if (videos.empty()) {
+            return makeError<std::vector<Video>>(
+                ErrorCode::NotFound,
+                std::format("no videos found for '{}' (channel id may be invalid)", channelId));
         }
         return videos;
     }
@@ -1093,6 +1103,18 @@ public:
         writeJsonFile(queueFile(), json::array());
     }
 
+    void removeQueueEntry(std::size_t index)
+    {
+        auto path = queueFile();
+        auto data = readJsonFile(path);
+        if (!data.has_value()) return;
+
+        if (index < data->size()) {
+            data->erase(data->begin() + static_cast<json::difference_type>(index));
+            writeJsonFile(path, *data);
+        }
+    }
+
     Result<std::vector<std::string>> listPlaylists()
     {
         auto plDir = detail::configDir() + "/playlists";
@@ -1367,6 +1389,11 @@ Result<std::vector<Video>> Client::getQueue()
 void Client::clearQueue()
 {
     m_impl->clearQueue();
+}
+
+void Client::removeQueueEntry(std::size_t index)
+{
+    m_impl->removeQueueEntry(index);
 }
 
 Result<std::vector<std::string>> Client::listPlaylists()

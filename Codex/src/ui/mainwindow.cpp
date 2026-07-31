@@ -1224,19 +1224,19 @@ void MainWindow::showHelp()
     browser->setOpenExternalLinks(true);
     browser->setStyleSheet(QStringLiteral(
         "QTextBrowser { background: #1B1B1B; color: #D8D8D8; border: none; }"
-        "a { color: #6B8A9E; }"
+        "a { color: #8A8A8A; }"
     ));
 
     auto helpText = QStringLiteral(R"(
-<h2 style="color:#6B8A9E;">Markdown Syntax Reference</h2>
+<h2 style="color:#8A8A8A;">Markdown Syntax Reference</h2>
 
-<h3 style="color:#6B8A9E;">Headings</h3>
+<h3 style="color:#8A8A8A;">Headings</h3>
 <pre><code># Heading 1
 ## Heading 2
 ### Heading 3
 </code></pre>
 
-<h3 style="color:#6B8A9E;">Text Formatting</h3>
+<h3 style="color:#8A8A8A;">Text Formatting</h3>
 <pre><code>**bold**  __bold__
 *italic*  _italic_
 ~~strikethrough~~
@@ -1244,7 +1244,7 @@ void MainWindow::showHelp()
 `inline code`
 </code></pre>
 
-<h3 style="color:#6B8A9E;">Lists</h3>
+<h3 style="color:#8A8A8A;">Lists</h3>
 <pre><code>- Unordered item
 * Unordered item
 + Unordered item
@@ -1254,48 +1254,48 @@ void MainWindow::showHelp()
 - [x] Checked task
 </code></pre>
 
-<h3 style="color:#6B8A9E;">Links &amp; Wiki Links</h3>
+<h3 style="color:#8A8A8A;">Links &amp; Wiki Links</h3>
 <pre><code>[Link text](https://example.com)
 [[Wiki Link to another note]]
 </code></pre>
 
-<h3 style="color:#6B8A9E;">Images &amp; Media</h3>
+<h3 style="color:#8A8A8A;">Images &amp; Media</h3>
 <pre><code>![Alt text](path/to/image.png)
 &lt;video src="video.mp4" controls&gt;&lt;/video&gt;
 &lt;audio src="audio.mp3" controls&gt;&lt;/audio&gt;
 </code></pre>
 
-<h3 style="color:#6B8A9E;">Code Blocks</h3>
+<h3 style="color:#8A8A8A;">Code Blocks</h3>
 <pre><code>```
 code block
 multiple lines
 ```
 </code></pre>
 
-<h3 style="color:#6B8A9E;">Blockquotes</h3>
+<h3 style="color:#8A8A8A;">Blockquotes</h3>
 <pre><code>&gt; Quoted text
 &gt; Multiple lines
 </code></pre>
 
-<h3 style="color:#6B8A9E;">Horizontal Rule</h3>
+<h3 style="color:#8A8A8A;">Horizontal Rule</h3>
 <pre><code>---
 </code></pre>
 
-<h3 style="color:#6B8A9E;">Alignment</h3>
+<h3 style="color:#8A8A8A;">Alignment</h3>
 <pre><code>&lt;center&gt;Centered text&lt;/center&gt;
 &lt;p align="right"&gt;Right-aligned&lt;/p&gt;
 </code></pre>
 
-<h3 style="color:#6B8A9E;">Tags</h3>
+<h3 style="color:#8A8A8A;">Tags</h3>
 <pre><code>#tag  #project/feature
 </code></pre>
 
-<h3 style="color:#6B8A9E;">Checkboxes</h3>
+<h3 style="color:#8A8A8A;">Checkboxes</h3>
 <pre><code>Click on [ ] or [x] in the editor to toggle.
 Rendered as ☐ ☑ in preview.
 </code></pre>
 
-<h3 style="color:#6B8A9E;">Keyboard Shortcuts</h3>
+<h3 style="color:#8A8A8A;">Keyboard Shortcuts</h3>
 <pre><code>Ctrl+S      Save
 Ctrl+N      New note
 F5          Toggle Source/Reading View
@@ -1308,7 +1308,7 @@ Tab         Insert 4 spaces
 
     auto *closeBtn = new QPushButton(QStringLiteral("Close"), &dlg);
     closeBtn->setStyleSheet(QStringLiteral(
-        "QPushButton { background: #6B8A9E; color: #1B1B1B; padding: 6px 20px;"
+        "QPushButton { background: #8A8A8A; color: #1B1B1B; padding: 6px 20px;"
         "border: none; border-radius: 4px; font-weight: bold; }"
     ));
     connect(closeBtn, &QPushButton::clicked, &dlg, &QDialog::accept);

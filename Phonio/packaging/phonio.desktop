@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Phonio
+GenericName=Music Player
+Comment=Music player with lyrics, playlists and a Spotify-style UI
+Exec=phonio
+Terminal=false
+Categories=Audio;AudioVideo;Player;
+StartupNotify=true

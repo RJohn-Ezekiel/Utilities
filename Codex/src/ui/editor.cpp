@@ -200,7 +200,7 @@ void Editor::applyRendering()
         "code { background: #2D2D2D; padding: 0.2em 0.4em; border-radius: 3px; }"
         "pre { background: #2D2D2D; padding: 0.8em; border-radius: 4px; }"
         "pre code { background: none; padding: 0; }"
-        "blockquote { border-left: 3px solid %3; margin: 0.5em 0; padding: 0.3em 0.8em; background: #252526; }"
+        "blockquote { border-left: 3px solid %3; margin: 0.5em 0; padding: 0.3em 0.8em; background: #252525; }"
         "img { max-width: 100%%; border-radius: 4px; }"
         "video { max-width: 100%%; border-radius: 4px; }"
         "ul, ol { margin: 0.8em 0; padding-left: 2em; }"
@@ -235,7 +235,7 @@ void Editor::updateCodeBlockBackgrounds()
             continue;
 
         QTextEdit::ExtraSelection sel;
-        sel.format.setBackground(QColor("#252526"));
+        sel.format.setBackground(QColor("#252525"));
         sel.format.setProperty(QTextFormat::FullWidthSelection, true);
         QTextCursor cursor(block);
         cursor.select(QTextCursor::BlockUnderCursor);

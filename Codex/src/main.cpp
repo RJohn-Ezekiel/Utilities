@@ -42,6 +42,11 @@ int main(int argc, char *argv[])
     parser.addOption({{"e", "export"}, QStringLiteral("Export a note or --all"), QStringLiteral("target")});
     parser.addOption(QCommandLineOption(QStringLiteral("all"), QStringLiteral("Export all notes")));
     parser.addOption({{"o", "output"}, QStringLiteral("Export output directory"), QStringLiteral("dir")});
+    auto screenshotOption = QCommandLineOption(
+        QStringLiteral("screenshot"),
+        QStringLiteral("Save a PNG of the main window to <path> and exit."),
+        QStringLiteral("path"));
+    parser.addOption(screenshotOption);
     parser.process(app);
 
     // Determine vault path
@@ -120,5 +125,12 @@ int main(int argc, char *argv[])
 
     codex::MainWindow window(&vault);
     window.show();
+
+    // Dev helper: render the window to a PNG and exit (used for visual checks).
+    if (parser.isSet(screenshotOption)) {
+        window.grab().save(parser.value(screenshotOption));
+        return 0;
+    }
+
     return app.exec();
 }
