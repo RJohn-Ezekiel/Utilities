@@ -1,0 +1,7 @@
+{
+  "id": "habits",
+  "name": "Habits",
+  "version": "1.0.0",
+  "description": "Habit streaks, weekly targets and seven-day history.",
+  "defaultEnabled": false
+}

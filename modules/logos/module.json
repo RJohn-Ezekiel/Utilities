@@ -1,0 +1,7 @@
+{
+  "id": "logos",
+  "name": "Logos",
+  "version": "1.0.0",
+  "description": "Scripture, daily verses, prayer and hymn modes.",
+  "defaultEnabled": false
+}

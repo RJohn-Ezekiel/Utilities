@@ -1,0 +1,7 @@
+{
+  "id": "projects",
+  "name": "Projects",
+  "version": "1.0.0",
+  "description": "Track projects with progress bars, deadlines and live task counts.",
+  "defaultEnabled": false
+}

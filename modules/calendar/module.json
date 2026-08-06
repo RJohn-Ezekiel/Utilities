@@ -1,0 +1,7 @@
+{
+  "id": "calendar",
+  "name": "Calendar",
+  "version": "1.0.0",
+  "description": "Month grid with event counts; add, edit and delete time blocks.",
+  "defaultEnabled": false
+}

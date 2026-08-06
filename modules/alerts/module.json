@@ -1,0 +1,7 @@
+{
+  "id": "alerts",
+  "name": "Alerts",
+  "version": "1.0.0",
+  "description": "Notification history: reminders, events and errors.",
+  "defaultEnabled": false
+}

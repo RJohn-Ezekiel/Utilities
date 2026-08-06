@@ -1,0 +1,7 @@
+{
+  "id": "today",
+  "name": "Today",
+  "version": "1.0.0",
+  "description": "Daily dashboard: issues, habits and check-ins for any date.",
+  "defaultEnabled": false
+}

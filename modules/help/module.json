@@ -1,0 +1,7 @@
+{
+  "id": "help",
+  "name": "Help",
+  "version": "1.0.0",
+  "description": "Shortcuts, tab map, data locations and bug reporting.",
+  "defaultEnabled": false
+}

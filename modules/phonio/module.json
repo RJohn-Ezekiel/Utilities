@@ -1,0 +1,7 @@
+{
+  "id": "phonio",
+  "name": "Phonio",
+  "version": "1.0.0",
+  "description": "Music library and playback with lyrics.",
+  "defaultEnabled": false
+}

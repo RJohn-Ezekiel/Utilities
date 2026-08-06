@@ -1,0 +1,7 @@
+{
+  "id": "ops",
+  "name": "Ops",
+  "version": "1.0.0",
+  "description": "Chronological activity feed of sessions and completions.",
+  "defaultEnabled": false
+}

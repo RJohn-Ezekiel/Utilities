@@ -1,0 +1,7 @@
+{
+  "id": "logs",
+  "name": "Logs",
+  "version": "1.0.0",
+  "description": "Live application log output with level colours.",
+  "defaultEnabled": false
+}

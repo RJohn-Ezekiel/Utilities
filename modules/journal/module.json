@@ -1,0 +1,7 @@
+{
+  "id": "journal",
+  "name": "Journal",
+  "version": "1.0.0",
+  "description": "Daily reflection, gratitude and prompts.",
+  "defaultEnabled": false
+}

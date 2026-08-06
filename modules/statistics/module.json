@@ -1,0 +1,7 @@
+{
+  "id": "statistics",
+  "name": "Statistics",
+  "version": "1.0.0",
+  "description": "Focus minutes, sessions and streaks over time.",
+  "defaultEnabled": false
+}
