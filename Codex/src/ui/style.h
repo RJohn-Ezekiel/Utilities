@@ -5,19 +5,19 @@
 namespace codex {
 namespace style {
 
-// Colour palette
-inline constexpr auto BG_PRIMARY    = "#1B1B1B";
-inline constexpr auto BG_SECONDARY  = "#252525";
-inline constexpr auto BG_TERTIARY   = "#2D2D2D";
+// Colour palette — shared Arete palette
+inline constexpr auto BG_PRIMARY    = "#111111";
+inline constexpr auto BG_SECONDARY  = "#242424";
+inline constexpr auto BG_TERTIARY   = "#333333";
 inline constexpr auto BG_INPUT      = "#333333";
-inline constexpr auto TEXT_PRIMARY  = "#D8D8D8";
-inline constexpr auto TEXT_SECONDARY = "#9E9E9E";
-inline constexpr auto ACCENT       = "#8A8A8A";
-inline constexpr auto ACCENT_HOVER = "#9A9A9A";
+inline constexpr auto TEXT_PRIMARY  = "#C4C4C4";
+inline constexpr auto TEXT_SECONDARY = "#A0A0A0";
+inline constexpr auto ACCENT       = "#D0D0D0";
+inline constexpr auto ACCENT_HOVER = "#B0B0B0";
 inline constexpr auto BORDER       = "#353535";
-inline constexpr auto RED          = "#B8B8B8";
-inline constexpr auto GREEN        = "#7A7A7A";
-inline constexpr auto YELLOW       = "#C2C2C2";
+inline constexpr auto RED          = "#C45050";
+inline constexpr auto GREEN        = "#6AA06A";
+inline constexpr auto YELLOW       = "#C4A050";
 
 inline QString appStyleSheet()
 {

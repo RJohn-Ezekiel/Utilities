@@ -92,7 +92,7 @@ QImage ArtworkManager::makePlaceholder(int size) const
     p.setRenderHint(QPainter::Antialiasing);
     QLinearGradient gradient(0, 0, size, size);
     gradient.setColorAt(0.0, QColor(58, 58, 58));
-    gradient.setColorAt(1.0, QColor(38, 38, 38));
+    gradient.setColorAt(1.0, QColor(46, 46, 46));
     p.setBrush(gradient);
     p.setPen(Qt::NoPen);
     p.drawRoundedRect(0, 0, size, size, size / 12.0, size / 12.0);

@@ -38,7 +38,6 @@ private:
     QVector<QLabel*> m_labels;
     QVariantAnimation* m_scrollAnimation;
     int m_activeLine = -1;
-    qint64 m_lastPositionMs = -1;
 };
 
 } // namespace phonio

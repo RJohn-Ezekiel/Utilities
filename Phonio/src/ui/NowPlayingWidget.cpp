@@ -81,7 +81,6 @@ NowPlayingWidget::NowPlayingWidget(PlaybackController* controller, ArtworkManage
     left->addWidget(m_artist);
     left->addWidget(m_album);
     left->addWidget(m_metaSummary);
-    left->addWidget(m_metaContainer);
 
     // Metadata grid (populated per track)
     m_metaContainer = new QWidget(this);
@@ -117,8 +116,8 @@ NowPlayingWidget::NowPlayingWidget(PlaybackController* controller, ArtworkManage
     bottom->setSpacing(10);
 
     auto* timeRow = new QHBoxLayout;
-    m_currentTime->setStyleSheet(QStringLiteral("color: rgba(184,184,184,160); font-size: 12px;"));
-    m_remainingTime->setStyleSheet(QStringLiteral("color: rgba(184,184,184,160); font-size: 12px;"));
+    m_currentTime->setStyleSheet(QStringLiteral("color: rgba(160,160,160,160); font-size: 12px;"));
+    m_remainingTime->setStyleSheet(QStringLiteral("color: rgba(160,160,160,160); font-size: 12px;"));
     timeRow->addWidget(m_currentTime);
     timeRow->addStretch();
     timeRow->addWidget(m_remainingTime);
@@ -134,12 +133,13 @@ NowPlayingWidget::NowPlayingWidget(PlaybackController* controller, ArtworkManage
     m_playPause->setFixedSize(56, 56);
     m_playPause->setIconSize(QSize(28, 28));
     auto* next = makeIconButton(TransportIcons::skipForward(Theme::textPrimary()), tr("Next"));
+    auto* queueBtn = makeIconButton(TransportIcons::queue(Theme::textPrimary()), tr("Queue"));
     transportRow->addStretch();
     transportRow->addWidget(prev);
     transportRow->addWidget(m_playPause);
     transportRow->addWidget(next);
     transportRow->addStretch();
-
+    transportRow->addWidget(queueBtn);
     bottom->addLayout(timeRow);
     bottom->addWidget(m_seekSlider);
     bottom->addLayout(transportRow);
@@ -147,6 +147,7 @@ NowPlayingWidget::NowPlayingWidget(PlaybackController* controller, ArtworkManage
 
     // Wiring
     connect(m_backButton, &QToolButton::clicked, this, &NowPlayingWidget::backRequested);
+    connect(queueBtn, &QToolButton::clicked, this, &NowPlayingWidget::queueRequested);
     connect(prev, &QToolButton::clicked, this, [this] { m_controller->playPrevious(); });
     connect(next, &QToolButton::clicked, this, [this] { m_controller->playNext(); });
     connect(m_playPause, &QToolButton::clicked, this, [this] { m_controller->togglePlayPause(); });
@@ -255,6 +256,7 @@ void NowPlayingWidget::onPositionChanged(qint64 positionMs)
     if (m_seeking)
         return;
     updateBigSeek(positionMs);
+    m_lyricsWidget->setPosition(positionMs);
 }
 
 void NowPlayingWidget::updateBigSeek(qint64 positionMs)

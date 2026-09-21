@@ -23,9 +23,13 @@ public:
     explicit PlaylistsPage(PlaylistManager* playlists, PlaybackController* controller,
                            QWidget* parent = nullptr);
 
+    void selectPlaylistByName(const QString& name);
+    [[nodiscard]] int pageIndex() const;
+
 signals:
     void editMetadataRequested(const Track& track);
     void attachLyricsRequested(const Track& track);
+    void editLyricsRequested(const Track& track);
 
 private slots:
     void onPlaylistsChanged();

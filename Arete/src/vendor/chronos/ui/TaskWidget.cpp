@@ -34,7 +34,7 @@ TaskWidget::TaskWidget(const Task& task, bool isFirst, bool isLast,
     row1->addWidget(m_titleLabel, 1);
 
     // Move buttons
-    m_moveUpBtn = new QPushButton(QStringLiteral("^"), this);
+    m_moveUpBtn = new QPushButton(QStringLiteral("\u25B2"), this);
     m_moveUpBtn->setFixedSize(22, 22);
     m_moveUpBtn->setToolTip(QStringLiteral("Move up"));
     m_moveUpBtn->setEnabled(!isFirst);
@@ -42,7 +42,7 @@ TaskWidget::TaskWidget(const Task& task, bool isFirst, bool isLast,
         emit moveUpRequested(m_taskId);
     });
 
-    m_moveDownBtn = new QPushButton(QStringLiteral("v"), this);
+    m_moveDownBtn = new QPushButton(QStringLiteral("\u25BC"), this);
     m_moveDownBtn->setFixedSize(22, 22);
     m_moveDownBtn->setToolTip(QStringLiteral("Move down"));
     m_moveDownBtn->setEnabled(!isLast);
@@ -69,7 +69,7 @@ TaskWidget::TaskWidget(const Task& task, bool isFirst, bool isLast,
     });
     row1->addWidget(m_editBtn);
 
-    m_deleteBtn = new QPushButton(QStringLiteral("x"), this);
+    m_deleteBtn = new QPushButton(QStringLiteral("\u2716"), this);
     m_deleteBtn->setFixedSize(24, 24);
     m_deleteBtn->setToolTip(QStringLiteral("Delete task"));
     connect(m_deleteBtn, &QPushButton::clicked, this, [this]() {
@@ -147,7 +147,7 @@ void TaskWidget::updateTask(const Task& task, bool isFirst, bool isLast)
 void TaskWidget::applyStyle()
 {
     if (m_completed) {
-        m_completeBtn->setText(QStringLiteral("ok"));
+        m_completeBtn->setText(QStringLiteral("\u2713"));
         m_completeBtn->setStyleSheet(QStringLiteral(
             "QPushButton {"
             "  background: %1;"

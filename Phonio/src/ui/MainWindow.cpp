@@ -19,7 +19,12 @@
 #include "ui/QueuePage.h"
 #include "ui/SettingsPage.h"
 #include "ui/MetadataDialog.h"
+#include "ui/LyricsEditorDialog.h"
 
+#include "arete/dialogs/DiagnosticsDialog.h"
+#include "arete/update/UpdateService.h"
+
+#include <QAbstractButton>
 #include <QListWidget>
 #include <QStackedWidget>
 #include <QHBoxLayout>
@@ -43,6 +48,8 @@ enum SidebarItem {
     SidebarGenres,
     SidebarQueue,
     SidebarSettings,
+    SidebarDiagnostics,
+    SidebarUpdate,
     SidebarCount,
 };
 
@@ -104,7 +111,7 @@ MainWindow::MainWindow(App* app, QWidget* parent)
     m_sidebar->setSpacing(2);
     const QStringList items = { tr("Library"), tr("Artists"), tr("Albums"),
                                 tr("Playlists"), tr("Genres"), tr("Queue"),
-                                tr("Settings") };
+                                tr("Settings"), tr("Diagnostics"), tr("Update") };
     for (const QString& item : items)
         m_sidebar->addItem(item);
     sidebarLayout->addWidget(m_sidebar, 1);
@@ -137,10 +144,13 @@ MainWindow::MainWindow(App* app, QWidget* parent)
     // --- Wiring: pages ---
     connect(m_libraryPage, &LibraryPage::editMetadataRequested, this, &MainWindow::handleEditMetadata);
     connect(m_libraryPage, &LibraryPage::attachLyricsRequested, this, &MainWindow::handleAttachLyrics);
+    connect(m_libraryPage, &LibraryPage::editLyricsRequested, this, &MainWindow::handleEditLyrics);
     connect(m_playlistsPage, &PlaylistsPage::editMetadataRequested, this, &MainWindow::handleEditMetadata);
     connect(m_playlistsPage, &PlaylistsPage::attachLyricsRequested, this, &MainWindow::handleAttachLyrics);
+    connect(m_playlistsPage, &PlaylistsPage::editLyricsRequested, this, &MainWindow::handleEditLyrics);
     connect(m_queuePage, &QueuePage::editMetadataRequested, this, &MainWindow::handleEditMetadata);
     connect(m_queuePage, &QueuePage::attachLyricsRequested, this, &MainWindow::handleAttachLyrics);
+    connect(m_queuePage, &QueuePage::editLyricsRequested, this, &MainWindow::handleEditLyrics);
     connect(m_settingsPage, &SettingsPage::rescanRequested, this, &MainWindow::ensureScanStarted);
 
     // --- Wiring: controller ---
@@ -174,6 +184,20 @@ void MainWindow::onSidebarChanged(int row)
 {
     if (row < 0 || row >= SidebarCount)
         return;
+    if (row == SidebarDiagnostics) {
+        arete::dialogs::DiagnosticsDialog::openDialog(this);
+        m_sidebar->blockSignals(true);
+        m_sidebar->setCurrentRow(m_browserStackIndex);
+        m_sidebar->blockSignals(false);
+        return;
+    }
+    if (row == SidebarUpdate) {
+        arete::update::UpdateService::promptAndApply(this, QStringLiteral("phonio"));
+        m_sidebar->blockSignals(true);
+        m_sidebar->setCurrentRow(m_browserStackIndex);
+        m_sidebar->blockSignals(false);
+        return;
+    }
     m_browserStackIndex = row;
     m_stack->setCurrentIndex(row);
 }
@@ -197,6 +221,17 @@ void MainWindow::setNowPlayingPage(NowPlayingWidget* page)
         m_stack->setCurrentIndex(m_browserStackIndex);
         m_sidebar->setCurrentRow(m_browserStackIndex);
     });
+    connect(m_nowPlaying, &NowPlayingWidget::queueRequested, this, [this] {
+        m_stack->setCurrentIndex(SidebarQueue);
+        m_sidebar->setCurrentRow(SidebarQueue);
+    });
+}
+
+void MainWindow::openPlaylistByName(const QString& name)
+{
+    m_stack->setCurrentIndex(m_playlistsPage->pageIndex());
+    m_sidebar->setCurrentRow(m_playlistsPage->pageIndex());
+    m_playlistsPage->selectPlaylistByName(name);
 }
 
 void MainWindow::onCurrentTrackChanged(const Track& track)
@@ -234,12 +269,13 @@ void MainWindow::handleAttachLyrics(const Track& track)
         tr("LRC files (*.lrc);;All files (*)"));
     if (file.isEmpty())
         return;
-    const auto answer = QMessageBox::question(
-        this, tr("Attach Lyrics"),
-        tr("Copy the .lrc file next to the song, or store only a reference?\n\n"
-           "Copying is recommended (lyrics travel with the file)."),
-        tr("Copy Beside Song"), tr("Store Reference"), QString(), 0, 0);
-    const bool copyBeside = (answer == 0);
+    QMessageBox copyBox(QMessageBox::Question, tr("Attach Lyrics"),
+                        tr("Copy the .lrc file next to the song, or store only a reference?\n\n"
+                           "Copying is recommended (lyrics travel with the file)."),
+                        QMessageBox::Yes | QMessageBox::No, this);
+    copyBox.button(QMessageBox::Yes)->setText(tr("Copy Beside Song"));
+    copyBox.button(QMessageBox::No)->setText(tr("Store Reference"));
+    const bool copyBeside = (copyBox.exec() == QMessageBox::Yes);
     const QString result = m_lyrics->attachLyrics(track, file, copyBeside);
     if (result.isEmpty()) {
         QMessageBox::warning(this, tr("Attach Failed"), tr("Could not attach the lyrics file."));
@@ -247,6 +283,12 @@ void MainWindow::handleAttachLyrics(const Track& track)
     }
     if (m_controller->currentTrackId() == track.id)
         m_lyrics->loadLyricsFor(track);
+}
+
+void MainWindow::handleEditLyrics(const Track& track)
+{
+    LyricsEditorDialog dialog(track, m_lyrics, m_controller, this);
+    dialog.exec();
 }
 
 } // namespace phonio

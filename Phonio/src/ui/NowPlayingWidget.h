@@ -31,6 +31,7 @@ public:
 
 signals:
     void backRequested();
+    void queueRequested();
 
 private slots:
     void onCurrentTrackChanged(const Track& track);

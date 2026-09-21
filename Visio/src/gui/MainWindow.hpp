@@ -11,6 +11,10 @@
 #include <QStatusBar>
 #include <QToolBar>
 #include <QComboBox>
+#include <QHash>
+#include <QIcon>
+#include <QSet>
+#include <QStringList>
 
 #include <string_view>
 
@@ -27,6 +31,9 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget* parent = nullptr);
     ~MainWindow() noexcept override;
+
+    // Add a URL to the download queue (used by deep links / CLI)
+    void addDownload(const QString& url);
 
 private slots:
     void onSearch();
@@ -52,6 +59,10 @@ private slots:
     void onSubClicked(int row);
     void onTabChanged(int index);
     void onHelp();
+    void onUpdateYtdlp();
+    void onRetryFailed();
+    void onClipboardToggle(bool enabled);
+    void onWellnessReminder();
 
 private:
     void setupUi();
@@ -65,6 +76,8 @@ private:
     void showVideoDetail(const Video& video);
     void setStatus(const QString& message);
     QListWidgetItem* makeVideoItem(const Video& video);
+    void startDownload(const Video& video, bool audioOnly = false);
+    void loadThumbnail(const QString& url, QListWidgetItem* item);
 
     Client m_client;
 
@@ -99,13 +112,30 @@ private:
     QPushButton* m_saveQueueBtn{};
     QPushButton* m_loadPlaylistBtn{};
     QPushButton* m_deletePlaylistBtn{};
+    QPushButton* m_updateYtdlpBtn{};
+    QPushButton* m_clipboardBtn{};
+    QPushButton* m_retryBtn{};
     QComboBox* m_qualitySelector{};
 
     QNetworkAccessManager* m_thumbnailManager{};
     QString m_thumbnailUrl;
 
+    // Per-URL icon cache and in-flight guard for list thumbnails.
+    QHash<QString, QIcon> m_thumbnailCache;
+    QSet<QString> m_thumbnailPending;
+
     Video m_currentVideo;
     std::vector<Video> m_currentResults;
+
+    // Clipboard-detection state.
+    QTimer* m_clipboardTimer{};
+    QString m_lastClipboardText;
+
+    // Failed downloads (id -> last used title).
+    QStringList m_failedIds;
+
+    // Wellness reminder (45-minute cadence).
+    QTimer* m_wellnessTimer{};
 };
 
 } // namespace visio

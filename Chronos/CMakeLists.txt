@@ -9,6 +9,10 @@ set(CMAKE_AUTOUIC ON)
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets Multimedia)
 
+if(NOT TARGET AreteCore)
+    find_package(AreteCore REQUIRED)
+endif()
+
 add_subdirectory(src)
 
 option(BUILD_TESTS "Build unit tests" OFF)

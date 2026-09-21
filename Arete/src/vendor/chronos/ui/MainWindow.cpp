@@ -13,6 +13,7 @@
 #include "SessionCompleteDialog.h"
 
 #include "arete/dialogs/DiagnosticsDialog.h"
+#include "arete/update/UpdateService.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -48,7 +49,7 @@ MainWindow::MainWindow(TimerService* timerService,
         resize(1100, 750);
     }
 
-    // Global stylesheet is owned by the host application (Arete).
+    applyGlobalStyleSheet();
     setupUi();
     setupConnections();
     setupShortcuts();
@@ -210,6 +211,11 @@ void MainWindow::setupConnections()
     connect(m_toolbar, &ToolbarWidget::settingsClicked, this, [this]() {
         m_sidebar->setActivePage(SidebarWidget::Settings);
         m_centralStack->setCurrentIndex(SidebarWidget::Settings);
+    });
+
+    // Update button in toolbar
+    connect(m_toolbar, &ToolbarWidget::updateClicked, this, [this]() {
+        arete::update::UpdateService::promptAndApply(this, "chronos");
     });
 
     // Task → focus

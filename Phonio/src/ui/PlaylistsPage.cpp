@@ -9,6 +9,7 @@
 #include <QPushButton>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
+#include <QStackedWidget>
 #include <QInputDialog>
 #include <QMessageBox>
 #include <QMenu>
@@ -148,6 +149,7 @@ PlaylistsPage::PlaylistsPage(PlaylistManager* playlists, PlaybackController* con
             });
     connect(m_table, &SongTableView::editMetadataRequested, this, &PlaylistsPage::editMetadataRequested);
     connect(m_table, &SongTableView::attachLyricsRequested, this, &PlaylistsPage::attachLyricsRequested);
+    connect(m_table, &SongTableView::editLyricsRequested, this, &PlaylistsPage::editLyricsRequested);
     connect(m_table, &SongTableView::removeTrackRequested, this, [this](qint64 trackId) {
         if (m_selectedPlaylistId >= 0)
             m_playlists->removeTrackFromPlaylist(m_selectedPlaylistId, trackId);
@@ -205,6 +207,24 @@ void PlaylistsPage::selectPlaylist(qint64 playlistId)
             return;
         }
     }
+}
+
+void PlaylistsPage::selectPlaylistByName(const QString& name)
+{
+    for (int i = 0; i < m_nav->count(); ++i) {
+        if (m_nav->item(i)->text().compare(name, Qt::CaseInsensitive) == 0) {
+            m_nav->setCurrentRow(i);
+            return;
+        }
+    }
+}
+
+int PlaylistsPage::pageIndex() const
+{
+    if (const auto* stack = qobject_cast<QStackedWidget*>(parentWidget())) {
+        return stack->indexOf(this);
+    }
+    return -1;
 }
 
 void PlaylistsPage::loadPlaylist(qint64 playlistId)

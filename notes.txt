@@ -1,0 +1,19 @@
+issue in coredumping when journal is trying to access notes
+
+the order must be like this
+
+Home - Chronos - <all tabs enabled> - Modules - Settings
+
+the task management can be better, arete can run in background - 
+
+cntrl-s can save the journal when complete - 
+
+jpurnal streak is a bit buggy - allow user to delete and save journals too - streak not working properly
+
+i would like to add a terminal like simulator in it - basic commands like help, phonio, codex, stats ... can work on that
+
+the wysiwym can be improved - push to github, also make it updatable from the github repo
+
+continue building the features, refactoring coded, and push to RJohn_Ezekiel/Utilities
+
+

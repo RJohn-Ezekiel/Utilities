@@ -231,11 +231,12 @@ void SongTableView::buildContextMenu(const QPoint& globalPos, const Track& ancho
     menu.addSeparator();
     menu.addAction(tr("Edit Metadata..."), this, [this, anchor] { emit editMetadataRequested(anchor); });
     menu.addAction(tr("Add Lyrics..."), this, [this, anchor] { emit attachLyricsRequested(anchor); });
+    menu.addAction(tr("Edit Lyrics..."), this, [this, anchor] { emit editLyricsRequested(anchor); });
 
     auto* ratingMenu = menu.addMenu(tr("Rating"));
     for (int stars = 1; stars <= 5; ++stars) {
         const int value = stars;
-        ratingMenu->addAction(QString(stars, QLatin1Char('★')), this,
+        ratingMenu->addAction(QString(stars, QChar(0x2605)), this,
                               [this, anchor, value] { emit setRatingRequested(anchor.id, value); });
     }
     ratingMenu->addAction(tr("Clear Rating"), this, [this, anchor] { emit setRatingRequested(anchor.id, 0); });
@@ -349,12 +350,12 @@ void RatingDelegate::paint(QPainter* painter, const QStyleOptionViewItem& option
     painter->save();
     if (option.state & QStyle::State_Selected)
         painter->fillRect(option.rect, option.palette.highlight());
-    painter->setPen(QColor(200, 200, 200));
+    painter->setPen(QColor(196, 196, 196));
     QFont font = option.font;
     font.setPixelSize(13);
     painter->setFont(font);
     painter->drawText(option.rect.adjusted(8, 0, -8, 0), Qt::AlignVCenter | Qt::AlignRight,
-                      QString(rating, QLatin1Char('★')));
+                      QString(rating, QChar(0x2605)));
     painter->restore();
 }
 

@@ -24,6 +24,8 @@ void printHelp()
               << "  logos --search <query>         Search for text\n"
               << "  logos --random                 Random verse\n"
               << "  logos --today                  Daily verse\n"
+              << "  logos --prayer [query]         Open Prayer Mode\n"
+              << "  logos --hymn [query]           Open Hymn Mode\n"
               << "\n"
               << "Examples:\n"
               << "  logos John 3:16\n"
@@ -31,6 +33,8 @@ void printHelp()
               << "  logos John 3:16-18\n"
               << "  logos 1 Peter 5:7\n"
               << "  logos --search faith\n"
+              << "  logos --prayer ave\n"
+              << "  logos --hymn 5\n"
               << std::endl;
 }
 
@@ -122,6 +126,14 @@ CLIHandler::Config CLIHandler::parse(int argc, char* argv[])
         config.mode = Mode::Random;
     } else if (arg1 == "--today" || arg1 == "-t") {
         config.mode = Mode::Daily;
+    } else if (arg1 == "--prayer") {
+        config.mode = Mode::Prayer;
+        if (argc > 2)
+            config.query = argv[2];
+    } else if (arg1 == "--hymn") {
+        config.mode = Mode::Hymn;
+        if (argc > 2)
+            config.query = argv[2];
     } else {
         // Assume it's a reference
         std::string referenceStr;

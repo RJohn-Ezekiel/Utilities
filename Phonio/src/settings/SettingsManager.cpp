@@ -30,7 +30,7 @@ SettingsManager::SettingsManager(QObject* parent)
     if (!m_settings->contains(QLatin1String(kRepeat)))
         setRepeatMode(0);
     if (!m_settings->contains(QLatin1String(kAccent)))
-        setAccentColor(QColor(216, 216, 216));
+        setAccentColor(QColor(208, 208, 208));
 }
 
 void SettingsManager::sync()
@@ -127,9 +127,7 @@ void SettingsManager::setAutoLoadLyrics(bool enabled)
 
 QColor SettingsManager::accentColor() const
 {
-    const QString stored = m_settings->value(QLatin1String(kAccent), QColor(216, 216, 216).name()).toString();
-    if (stored == QLatin1String("#1ed760"))
-        return QColor(216, 216, 216);
+    const QString stored = m_settings->value(QLatin1String(kAccent), QColor(208, 208, 208).name()).toString();
     return QColor(stored);
 }
 

@@ -41,6 +41,7 @@ public:
 
     void setNowPlayingPage(NowPlayingWidget* page);
     void showNowPlaying();
+    void openPlaylistByName(const QString& name);
 
 private slots:
     void onSidebarChanged(int row);
@@ -51,6 +52,7 @@ private:
     void showBrowserPage(int stackIndex);
     void handleEditMetadata(const Track& track);
     void handleAttachLyrics(const Track& track);
+    void handleEditLyrics(const Track& track);
     void ensureScanStarted();
 
     App* m_app;

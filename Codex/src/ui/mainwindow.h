@@ -25,6 +25,8 @@ public:
     explicit MainWindow(VaultManager *vault, QWidget *parent = nullptr);
     ~MainWindow() override;
 
+    void openNote(const QString &title);
+
 private slots:
     void onNoteSelected(const std::filesystem::path &path);
     void onNoteSaved(const std::filesystem::path &path);

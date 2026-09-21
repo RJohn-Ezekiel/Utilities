@@ -5,31 +5,31 @@
 
 namespace chronos::Theme {
 
-// Backgrounds
-inline constexpr QColor Background(27, 27, 27);       // #1B1B1B
-inline constexpr QColor Panel(35, 35, 35);             // #232323
-inline constexpr QColor Toolbar(37, 37, 37);           // #252525
-inline constexpr QColor StatusBarBg(37, 37, 37);       // #252525
-inline constexpr QColor Card(42, 42, 42);              // #2A2A2A
+// Shared Arete palette (spec)
+inline constexpr QColor Background(0x11, 0x11, 0x11);    // #111111
+inline constexpr QColor Panel(0x24, 0x24, 0x24);          // #242424
+inline constexpr QColor Toolbar(0x24, 0x24, 0x24);        // #242424
+inline constexpr QColor StatusBarBg(0x24, 0x24, 0x24);    // #242424
+inline constexpr QColor Card(0x2E, 0x2E, 0x2E);           // slightly lighter panel
 
 // Borders
-inline constexpr QColor Border(53, 53, 53);            // #353535
+inline constexpr QColor Border(53, 53, 53);               // #353535
 
 // Text
-inline constexpr QColor PrimaryText(216, 216, 216);     // #D8D8D8
-inline constexpr QColor SecondaryText(169, 169, 169);   // #A9A9A9
+inline constexpr QColor PrimaryText(0xC4, 0xC4, 0xC4);    // #C4C4C4 heading
+inline constexpr QColor SecondaryText(0xA0, 0xA0, 0xA0);  // #A0A0A0 text
 
 // Interactive
-inline constexpr QColor Selection(58, 58, 58);          // #3A3A3A
-inline constexpr QColor Hover(46, 46, 46);              // #2E2E2E
+inline constexpr QColor Selection(0x3A, 0x3A, 0x3A);
+inline constexpr QColor Hover(0x2E, 0x2E, 0x2E);
 
-// Accent — grey
-inline constexpr QColor Accent(138, 138, 138);          // #8A8A8A
-inline constexpr QColor AccentDim(110, 110, 110);        // darker accent for pressed
+// Accent — light grey
+inline constexpr QColor Accent(0xD0, 0xD0, 0xD0);         // #D0D0D0 highlight
+inline constexpr QColor AccentDim(0xB0, 0xB0, 0xB0);
 
 // Semantic
-inline constexpr QColor Success(122, 122, 122);           // #7A7A7A
-inline constexpr QColor Warning(154, 154, 154);          // #9A9A9A
-inline constexpr QColor Error(110, 110, 110);             // #6E6E6E
+inline constexpr QColor Success(0x6A, 0xA0, 0x6A);
+inline constexpr QColor Warning(0xC4, 0xA0, 0x50);
+inline constexpr QColor Error(0xC4, 0x50, 0x50);
 
 } // namespace chronos::Theme

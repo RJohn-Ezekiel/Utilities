@@ -30,6 +30,7 @@ public:
 signals:
     void editMetadataRequested(const Track& track);
     void attachLyricsRequested(const Track& track);
+    void editLyricsRequested(const Track& track);
 
 private slots:
     void onLibraryChanged();

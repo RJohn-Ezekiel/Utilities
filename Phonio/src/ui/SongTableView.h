@@ -55,6 +55,7 @@ signals:
     void addToPlaylistRequested(qint64 playlistId, const QVector<Track>& tracks);
     void editMetadataRequested(const Track& track);
     void attachLyricsRequested(const Track& track);
+    void editLyricsRequested(const Track& track);
     void setRatingRequested(qint64 trackId, int rating);
     void toggleFavoriteRequested(qint64 trackId);
     void removeTrackRequested(qint64 trackId);

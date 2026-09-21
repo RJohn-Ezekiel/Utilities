@@ -81,6 +81,9 @@ public:
         std::string_view directory = {},
         Quality quality = Quality::Best);
 
+    /// Update the yt-dlp binary to the latest version (runs `yt-dlp -U`).
+    [[nodiscard]] Result<void> updateYtDlp();
+
     // ---- History ----
 
     /// Retrieve watch history.

@@ -97,8 +97,8 @@ PlaybackBar::PlaybackBar(PlaybackController* controller, ArtworkManager* artwork
     m_seekSlider->setRange(0, 1);
     m_seekSlider->setFixedWidth(420);
     m_seekSlider->setEnabled(false);
-    m_currentTime->setStyleSheet(QStringLiteral("color: rgba(184,184,184,140); font-size: 11px; min-width: 38px;"));
-    m_totalTime->setStyleSheet(QStringLiteral("color: rgba(184,184,184,140); font-size: 11px; min-width: 38px;"));
+    m_currentTime->setStyleSheet(QStringLiteral("color: rgba(160,160,160,140); font-size: 11px; min-width: 38px;"));
+    m_totalTime->setStyleSheet(QStringLiteral("color: rgba(160,160,160,140); font-size: 11px; min-width: 38px;"));
 
     auto* seekRow = new QHBoxLayout;
     seekRow->setSpacing(8);
@@ -223,8 +223,11 @@ void PlaybackBar::onShuffleChanged(bool enabled)
 void PlaybackBar::onRepeatModeChanged(RepeatMode mode)
 {
     const bool active = mode != RepeatMode::Off;
+    const QColor color = active ? Theme::accent() : Theme::textPrimary();
     m_repeat->setChecked(active);
-    m_repeat->setIcon(TransportIcons::repeat(active ? Theme::accent() : Theme::textPrimary()));
+    m_repeat->setIcon(mode == RepeatMode::One
+                          ? TransportIcons::repeatOne(color)
+                          : TransportIcons::repeat(color));
     switch (mode) {
     case RepeatMode::Off:
         m_repeat->setToolTip(tr("Repeat: Off"));

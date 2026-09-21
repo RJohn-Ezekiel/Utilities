@@ -18,6 +18,11 @@ find_package(Qt6 6.5 REQUIRED COMPONENTS Core Gui Widgets Multimedia Sql)
 find_package(ZLIB REQUIRED)
 find_package(TagLib REQUIRED)
 
+# AreteCore (shared core library)
+if(NOT TARGET AreteCore)
+    find_package(AreteCore REQUIRED)
+endif()
+
 qt_standard_project_setup()
 
 set(PHONIO_SOURCES
@@ -46,6 +51,7 @@ set(PHONIO_SOURCES
     src/ui/QueuePage.cpp
     src/ui/SettingsPage.cpp
     src/ui/MetadataDialog.cpp
+    src/ui/LyricsEditorDialog.cpp
     src/ui/SlidingStack.cpp
     src/ui/SongTableView.cpp
     src/ui/TrackListModel.cpp
@@ -79,6 +85,7 @@ set(PHONIO_HEADERS
     src/ui/QueuePage.h
     src/ui/SettingsPage.h
     src/ui/MetadataDialog.h
+    src/ui/LyricsEditorDialog.h
     src/ui/SlidingStack.h
     src/ui/SongTableView.h
     src/ui/TrackListModel.h
@@ -103,6 +110,7 @@ target_link_libraries(phonio PRIVATE
     Qt6::Multimedia
     Qt6::Sql
     TagLib::TagLib
+    AreteCore
 )
 
 # ---------------------------------------------------------------------------

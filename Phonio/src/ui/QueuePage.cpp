@@ -108,6 +108,7 @@ QueuePage::QueuePage(QueueManager* queue, PlaybackController* controller,
     });
     connect(m_table, &SongTableView::editMetadataRequested, this, &QueuePage::editMetadataRequested);
     connect(m_table, &SongTableView::attachLyricsRequested, this, &QueuePage::attachLyricsRequested);
+    connect(m_table, &SongTableView::editLyricsRequested, this, &QueuePage::editLyricsRequested);
 
     // Internal drag reorder
     m_table->onInternalDrop = [this](int fromRow, int toRow) {

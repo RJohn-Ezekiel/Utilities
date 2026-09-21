@@ -21,6 +21,7 @@ target_link_libraries(chronos_ui PUBLIC
     chronos_core
     chronos_models
     chronos_services
+    AreteCore
     Qt6::Core
     Qt6::Gui
     Qt6::Widgets

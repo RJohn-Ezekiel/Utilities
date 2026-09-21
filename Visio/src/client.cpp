@@ -378,6 +378,11 @@ public:
 
     Result<std::vector<Video>> search(std::string_view query, int limit)
     {
+        if (query.empty()) {
+            return makeError<std::vector<Video>>(
+                ErrorCode::InvalidInput, "query must not be empty");
+        }
+
         auto cacheKey = sha256(std::string(query));
         auto cFile = cacheFile(cacheKey);
 
@@ -1167,6 +1172,17 @@ public:
         return videos;
     }
 
+    Result<void> updateYtDlp()
+    {
+        auto output = detail::exec("yt-dlp -U");
+        if (!output.hasValue()) {
+            return Result<void>(Error(
+                ErrorCode::SubprocessError,
+                std::format("yt-dlp update failed: {}", output.error().message())));
+        }
+        return Result<void>{};
+    }
+
     Result<void> saveQueueAsPlaylist(std::string_view name)
     {
         auto queueResult = getQueue();
@@ -1410,6 +1426,11 @@ Result<std::vector<Video>> Client::loadPlaylist(
 Result<void> Client::saveQueueAsPlaylist(std::string_view name)
 {
     return m_impl->saveQueueAsPlaylist(name);
+}
+
+Result<void> Client::updateYtDlp()
+{
+    return m_impl->updateYtDlp();
 }
 
 Result<void> Client::addToPlaylist(std::string_view name, const Video& video)

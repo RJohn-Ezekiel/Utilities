@@ -12,6 +12,9 @@
 #include "MiniModeWindow.h"
 #include "SessionCompleteDialog.h"
 
+#include "arete/dialogs/DiagnosticsDialog.h"
+#include "arete/update/UpdateService.h"
+
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QLabel>
@@ -208,6 +211,11 @@ void MainWindow::setupConnections()
     connect(m_toolbar, &ToolbarWidget::settingsClicked, this, [this]() {
         m_sidebar->setActivePage(SidebarWidget::Settings);
         m_centralStack->setCurrentIndex(SidebarWidget::Settings);
+    });
+
+    // Update button in toolbar
+    connect(m_toolbar, &ToolbarWidget::updateClicked, this, [this]() {
+        arete::update::UpdateService::promptAndApply(this, "chronos");
     });
 
     // Task → focus
@@ -467,6 +475,13 @@ void MainWindow::onBreakCompleted()
 
 void MainWindow::onSidebarPageSelected(SidebarWidget::Page page)
 {
+    if (page == SidebarWidget::Diagnostics) {
+        arete::dialogs::DiagnosticsDialog::openDialog(this);
+        m_sidebar->setActivePage(m_centralStack->currentIndex() < SidebarWidget::Settings
+                                     ? static_cast<SidebarWidget::Page>(m_centralStack->currentIndex())
+                                     : SidebarWidget::Dashboard);
+        return;
+    }
     m_centralStack->setCurrentIndex(static_cast<int>(page));
     switch (page) {
     case SidebarWidget::History:

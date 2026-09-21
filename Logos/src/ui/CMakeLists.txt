@@ -11,6 +11,10 @@ add_library(bible_ui
     NotesPanel.cpp
     VersePanel.cpp
     SettingsDialog.cpp
+    PrayerModeWidget.cpp
+    HymnModeWidget.cpp
+    PrayerEditDialog.cpp
+    HymnEditDialog.cpp
 )
 
 target_include_directories(bible_ui PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
@@ -19,6 +23,7 @@ target_link_libraries(bible_ui PUBLIC
     bible_data
     bible_services
     bible_storage
+    AreteCore
     Qt6::Core
     Qt6::Widgets
 )

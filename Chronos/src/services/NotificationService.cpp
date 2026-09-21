@@ -46,7 +46,7 @@ void NotificationService::ensureTrayIcon()
     pixmap.fill(Qt::transparent);
     {
         QPainter p(&pixmap);
-        p.setBrush(QColor(138, 138, 138));
+        p.setBrush(QColor(160, 160, 160));
         p.setPen(Qt::NoPen);
         p.drawEllipse(1, 1, 14, 14);
     }

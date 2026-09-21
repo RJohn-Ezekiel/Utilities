@@ -1,5 +1,7 @@
 #include "MainWindow.h"
+#include "HymnModeWidget.h"
 #include "NotesPanel.h"
+#include "PrayerModeWidget.h"
 #include "ReaderPane.h"
 #include "SearchBar.h"
 #include "Sidebar.h"
@@ -9,13 +11,20 @@
 
 #include "core/Bible.h"
 #include "core/Reference.h"
+#include "data/HymnLibrary.h"
 #include "data/Loader.h"
+#include "data/PrayerLibrary.h"
 #include "services/ReferenceParser.h"
 #include "services/SearchService.h"
 #include "services/VerseService.h"
 #include "storage/BookmarkStorage.h"
 #include "storage/HistoryStorage.h"
 #include "storage/NoteStorage.h"
+
+#include "arete/dialogs/DiagnosticsDialog.h"
+#include "arete/ipc/Ipc.h"
+#include "arete/logging/Logger.h"
+#include "arete/update/UpdateService.h"
 
 #include <QAction>
 #include <QApplication>
@@ -97,6 +106,18 @@ void MainWindow::setupUI()
     sideBySideBtn_->setToolTip("Compare two translations side by side");
     barLayout->addWidget(sideBySideBtn_);
 
+    auto* prayerBtn = new QPushButton("Prayer");
+    prayerBtn->setFixedHeight(26);
+    prayerBtn->setToolTip("Prayer Mode (Ctrl+P)");
+    connect(prayerBtn, &QPushButton::clicked, this, &MainWindow::onPrayerMode);
+    barLayout->addWidget(prayerBtn);
+
+    auto* hymnBtn = new QPushButton("Hymn");
+    hymnBtn->setFixedHeight(26);
+    hymnBtn->setToolTip("Hymn Mode (Ctrl+H)");
+    connect(hymnBtn, &QPushButton::clicked, this, &MainWindow::onHymnMode);
+    barLayout->addWidget(hymnBtn);
+
     barLayout->addStretch();
 
     searchBar_ = new SearchBar;
@@ -113,6 +134,17 @@ void MainWindow::setupUI()
     settingsBtn->setToolTip("Settings (Ctrl+,)");
     connect(settingsBtn, &QPushButton::clicked, this, &MainWindow::openSettings);
     barLayout->addWidget(settingsBtn);
+
+    auto* diagBtn = new QPushButton("Diagnostics");
+    diagBtn->setFixedHeight(26);
+    diagBtn->setToolTip("Log viewer and notification center");
+    connect(diagBtn, &QPushButton::clicked, this, [this]() {
+        arete::dialogs::DiagnosticsDialog::openDialog(this);
+    });
+    barLayout->addWidget(diagBtn);
+
+    auto* updateBtn = new arete::update::UpdateButton("logos", {}, {"prayer.json", "hymns.json"});
+    barLayout->addWidget(updateBtn);
 
     root->addWidget(bar);
 
@@ -143,10 +175,19 @@ void MainWindow::setupUI()
     sideBySideReader_ = new SideBySideReader;
     sideBySideReader_->hide();
 
+    prayerMode_ = new PrayerModeWidget;
+    prayerMode_->hide();
+    hymnMode_ = new HymnModeWidget;
+    hymnMode_->hide();
+
     readerAreaLayout_->addWidget(tabWidget_, 1);
     readerAreaLayout_->addWidget(sideBySideReader_, 1);
+    readerAreaLayout_->addWidget(prayerMode_, 1);
+    readerAreaLayout_->addWidget(hymnMode_, 1);
     readerAreaLayout_->setStretchFactor(tabWidget_, 1);
     readerAreaLayout_->setStretchFactor(sideBySideReader_, 1);
+    readerAreaLayout_->setStretchFactor(prayerMode_, 1);
+    readerAreaLayout_->setStretchFactor(hymnMode_, 1);
 
     mainSplitter_->addWidget(readerArea_);
 
@@ -198,6 +239,24 @@ void MainWindow::setupShortcuts()
     ss->setShortcutContext(Qt::ApplicationShortcut);
     connect(ss, &QAction::triggered, this, &MainWindow::openSettings);
     addAction(ss);
+
+    auto* sp = new QAction("Prayer Mode", this);
+    sp->setShortcut(QKeySequence("Ctrl+P"));
+    sp->setShortcutContext(Qt::ApplicationShortcut);
+    connect(sp, &QAction::triggered, this, &MainWindow::onPrayerMode);
+    addAction(sp);
+
+    auto* sh = new QAction("Hymn Mode", this);
+    sh->setShortcut(QKeySequence("Ctrl+H"));
+    sh->setShortcutContext(Qt::ApplicationShortcut);
+    connect(sh, &QAction::triggered, this, &MainWindow::onHymnMode);
+    addAction(sh);
+
+    auto* se = new QAction("Exit Mode", this);
+    se->setShortcut(QKeySequence("Escape"));
+    se->setShortcutContext(Qt::ApplicationShortcut);
+    connect(se, &QAction::triggered, this, &MainWindow::onExitMode);
+    addAction(se);
 }
 
 void MainWindow::setupConnections()
@@ -260,6 +319,26 @@ void MainWindow::loadBibles(const std::string& biblesPath)
     sidebar_->setBookmarkStorage(bookmarkStorage_.get());
     sidebar_->setHistoryStorage(historyStorage_.get());
 
+    // Prayer / hymn libraries (external JSON, editable without recompiling).
+    prayerLibrary_ = std::make_unique<PrayerLibrary>();
+    hymnLibrary_ = std::make_unique<HymnLibrary>();
+    const QString base = QString::fromStdString(biblesPath);
+    prayerLibrary_->load(base);
+    hymnLibrary_->load(base);
+    prayerMode_->setLibrary(prayerLibrary_.get());
+    hymnMode_->setLibrary(hymnLibrary_.get());
+
+    QSettings s(SETTINGS_ORG, SETTINGS_APP);
+    hymnMode_->setFavouriteStorage(
+        [this](const QString& id) {
+            QSettings st(SETTINGS_ORG, SETTINGS_APP);
+            return st.value(QStringLiteral("hymnFavourites/%1").arg(id), false).toBool();
+        },
+        [this](const QString& id, bool fav) {
+            QSettings st(SETTINGS_ORG, SETTINGS_APP);
+            st.setValue(QStringLiteral("hymnFavourites/%1").arg(id), fav);
+        });
+
     if (translations_.size() >= 2) {
         sideBySideReader_->setLeftBible(translations_[0].get());
         sideBySideReader_->setRightBible(translations_[1].get());
@@ -271,6 +350,7 @@ void MainWindow::loadBibles(const std::string& biblesPath)
 void MainWindow::navigateTo(const Reference& ref)
 {
     if (!ref.isValid() || !activeBible_) return;
+
 
     int existing = findTab(ref);
     if (existing >= 0) {
@@ -307,6 +387,108 @@ void MainWindow::navigateTo(const Reference& ref)
                           + QString::fromStdString(activeBible_->shortName()));
     sidebar_->refreshHistory();
     sidebar_->refreshBookmarks();
+}
+
+void MainWindow::openUri(const QString& uri)
+{
+    // arete://logos/John/3/16   |   arete://logos/prayer/<text>   |   arete://logos/hymn/<text>
+    const arete::ipc::UriAction action = arete::ipc::parseUri(uri);
+    if (action.app != QStringLiteral("logos") || action.segments.isEmpty()) {
+        return;
+    }
+
+    const QString first = action.segments.first().toLower();
+    if (first == QStringLiteral("prayer")) {
+        openPrayerMode();
+        if (action.segments.size() > 1) {
+            prayerMode_->selectByText(action.segments.mid(1).join(QLatin1Char(' ')));
+        }
+        return;
+    }
+    if (first == QStringLiteral("hymn")) {
+        openHymnMode();
+        if (action.segments.size() > 1) {
+            hymnMode_->selectByText(action.segments.mid(1).join(QLatin1Char(' ')));
+        }
+        return;
+    }
+    if (first == QStringLiteral("read") || first == QStringLiteral("bible")) {
+        exitMode();
+        if (action.segments.size() > 1) {
+            openUri(QStringLiteral("arete://logos/") +
+                    action.segments.mid(1).join(QLatin1Char('/')));
+        }
+        return;
+    }
+
+    // "John/3/16" → "John 3:16" (accept space or slash separated)
+    QString refText = action.segments.join(QLatin1Char(' '));
+    const auto ref = ReferenceParser::parse(refText.toStdString());
+    if (ref.has_value()) {
+        navigateTo(*ref);
+    }
+}
+
+void MainWindow::onPrayerMode()
+{
+    openPrayerMode();
+}
+
+void MainWindow::onHymnMode()
+{
+    openHymnMode();
+}
+
+void MainWindow::onExitMode()
+{
+    exitMode();
+}
+
+void MainWindow::openPrayerMode()
+{
+    inAltMode_ = true;
+    tabWidget_->hide();
+    sideBySideReader_->hide();
+    hymnMode_->hide();
+    prayerMode_->show();
+    statusLabel_->setText(QStringLiteral("Prayer Mode")
+        + (prayerLibrary_ && !prayerLibrary_->filePath().isEmpty()
+            ? QStringLiteral(" — %1").arg(prayerLibrary_->filePath()) : QString()));
+}
+
+void MainWindow::openHymnMode()
+{
+    inAltMode_ = true;
+    tabWidget_->hide();
+    sideBySideReader_->hide();
+    prayerMode_->hide();
+    hymnMode_->show();
+    statusLabel_->setText(QStringLiteral("Hymn Mode")
+        + (hymnLibrary_ && !hymnLibrary_->filePath().isEmpty()
+            ? QStringLiteral(" — %1").arg(hymnLibrary_->filePath()) : QString()));
+}
+
+void MainWindow::exitMode()
+{
+    if (!inAltMode_) return;
+    inAltMode_ = false;
+    prayerMode_->hide();
+    hymnMode_->hide();
+    sideBySideReader_->setVisible(sideBySideMode_);
+    tabWidget_->setVisible(!sideBySideMode_);
+    statusLabel_->setText(QStringLiteral("Ready"));
+}
+
+void MainWindow::selectPrayerByText(const QString& text)
+{
+    if (!inAltMode_) openPrayerMode();
+    prayerMode_->selectByText(text);
+}
+
+void MainWindow::selectHymnByText(const QString& text)
+{
+    if (!inAltMode_) openHymnMode();
+    hymnMode_->selectByText(text);
 }
 
 void MainWindow::buildVerseHtml(ReaderPane* pane, const Bible* bible,
@@ -420,6 +602,7 @@ void MainWindow::onDailyVerse()
 
 void MainWindow::onToggleSideBySide()
 {
+    if (inAltMode_) return;
     sideBySideMode_ = !sideBySideMode_;
     sideBySideBtn_->setText(sideBySideMode_ ? "Single" : "Side-by-side");
 

@@ -81,6 +81,10 @@ ToolbarWidget::ToolbarWidget(QWidget* parent)
     m_settingsBtn->setToolTip(QStringLiteral("Open settings"));
     layout->addWidget(m_settingsBtn);
 
+    m_updateBtn = new QPushButton(QStringLiteral("Update"), this);
+    m_updateBtn->setToolTip(QStringLiteral("Check the build tree for a newer version and install it"));
+    layout->addWidget(m_updateBtn);
+
     connect(m_startBtn, &QPushButton::clicked, this, &ToolbarWidget::startClicked);
     connect(m_pauseBtn, &QPushButton::clicked, this, &ToolbarWidget::pauseClicked);
     connect(m_resumeBtn, &QPushButton::clicked, this, &ToolbarWidget::resumeClicked);
@@ -88,6 +92,7 @@ ToolbarWidget::ToolbarWidget(QWidget* parent)
     connect(m_skipBreakBtn, &QPushButton::clicked, this, &ToolbarWidget::skipBreakClicked);
     connect(m_miniModeBtn, &QPushButton::clicked, this, &ToolbarWidget::miniModeClicked);
     connect(m_settingsBtn, &QPushButton::clicked, this, &ToolbarWidget::settingsClicked);
+    connect(m_updateBtn, &QPushButton::clicked, this, &ToolbarWidget::updateClicked);
 }
 
 void ToolbarWidget::updateForState(TimerState state)

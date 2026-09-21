@@ -39,7 +39,7 @@ ToastNotification::ToastNotification(QWidget* parent)
     ).arg(Theme::PrimaryText.name()));
     titleRow->addWidget(m_titleLabel, 1);
 
-    m_closeBtn = new QPushButton(QStringLiteral("x"), container);
+    m_closeBtn = new QPushButton(QStringLiteral("\u2716"), container);
     m_closeBtn->setFixedSize(20, 20);
     m_closeBtn->setStyleSheet(QStringLiteral(
         "QPushButton { background: transparent; color: %1; border: none;"

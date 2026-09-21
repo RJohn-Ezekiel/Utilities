@@ -7,6 +7,7 @@
 #include <fstream>
 #include <memory>
 #include <string>
+#include <unistd.h>
 
 namespace visio::detail {
 

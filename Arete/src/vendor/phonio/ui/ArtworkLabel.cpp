@@ -46,28 +46,20 @@ void ArtworkLabel::paintEvent(QPaintEvent* event)
     path.addRoundedRect(target, m_cornerRadius, m_cornerRadius);
     p.setClipPath(path);
 
-    p.setBrush(QColor(58, 58, 58));
-    p.setPen(Qt::NoPen);
-    p.drawRect(target);
-
     if (m_fadeProgress < 1.0 && !m_oldPixmap.isNull()) {
         p.setOpacity(1.0 - m_fadeProgress);
-        drawScaled(p, target, m_oldPixmap);
+        p.drawPixmap(target, m_oldPixmap,
+                     m_oldPixmap.rect().intersected(
+                         QRect(0, 0, m_oldPixmap.width(), m_oldPixmap.height())));
         p.setOpacity(1.0);
     }
     if (!m_pixmap.isNull())
-        drawScaled(p, target, m_pixmap);
-}
-
-void ArtworkLabel::drawScaled(QPainter& painter, const QRectF& target, const QPixmap& pixmap)
-{
-    if (pixmap.isNull()) return;
-    const QSizeF scaledSize = pixmap.size().scaled(
-        target.size().toSize(), Qt::KeepAspectRatio);
-    const QRectF scaledRect(target.center() - QPointF(scaledSize.width() / 2.0,
-                                                      scaledSize.height() / 2.0),
-                            scaledSize);
-    painter.drawPixmap(scaledRect, pixmap, QRectF(0, 0, pixmap.width(), pixmap.height()));
+        p.drawPixmap(target, m_pixmap, m_pixmap.rect());
+    else {
+        p.setBrush(QColor(58, 58, 58));
+        p.setPen(Qt::NoPen);
+        p.drawRect(target);
+    }
 }
 
 } // namespace phonio

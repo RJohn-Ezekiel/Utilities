@@ -5,13 +5,13 @@
 
 namespace phonio {
 
-QColor Theme::m_base = QColor(18, 18, 18);
-QColor Theme::m_surface = QColor(26, 26, 26);
-QColor Theme::m_surfaceAlt = QColor(35, 35, 35);
-QColor Theme::m_border = QColor(46, 46, 46);
-QColor Theme::m_textPrimary = QColor(184, 184, 184);
-QColor Theme::m_textSecondary = QColor(125, 125, 125);
-QColor Theme::m_accent = QColor(216, 216, 216);
+QColor Theme::m_base = QColor(17, 17, 17);        // #111111
+QColor Theme::m_surface = QColor(24, 24, 24);     // #242424
+QColor Theme::m_surfaceAlt = QColor(51, 51, 51);  // input/surface alt
+QColor Theme::m_border = QColor(53, 53, 53);      // #353535
+QColor Theme::m_textPrimary = QColor(196, 196, 196); // #C4C4C4
+QColor Theme::m_textSecondary = QColor(160, 160, 160); // #A0A0A0
+QColor Theme::m_accent = QColor(208, 208, 208);   // #D0D0D0
 
 void Theme::apply(QApplication& app, const QColor& accentColor)
 {
@@ -26,12 +26,12 @@ void Theme::apply(QApplication& app, const QColor& accentColor)
     palette.setColor(QPalette::Button, m_surfaceAlt);
     palette.setColor(QPalette::ButtonText, m_textPrimary);
     palette.setColor(QPalette::Highlight, m_accent.darker(130));
-    palette.setColor(QPalette::HighlightedText, QColor(20, 20, 20));
+    palette.setColor(QPalette::HighlightedText, QColor(17, 17, 17));
     palette.setColor(QPalette::PlaceholderText, m_textSecondary);
     palette.setColor(QPalette::ToolTipBase, m_surfaceAlt);
     palette.setColor(QPalette::ToolTipText, m_textPrimary);
-    palette.setColor(QPalette::Disabled, QPalette::Text, QColor(110, 110, 110));
-    palette.setColor(QPalette::Disabled, QPalette::WindowText, QColor(110, 110, 110));
+    palette.setColor(QPalette::Disabled, QPalette::Text, QColor(160, 160, 160));
+    palette.setColor(QPalette::Disabled, QPalette::WindowText, QColor(160, 160, 160));
     app.setPalette(palette);
 
     app.setStyleSheet(styleSheet(accentColor));
@@ -70,7 +70,7 @@ QListWidget#sidebarList::item {
     color: %5;
 }
 QListWidget#sidebarList::item:hover {
-    background-color: rgba(184,184,184,0.05);
+    background-color: rgba(160,160,160,0.05);
 }
 QListWidget#sidebarList::item:selected {
     background-color: %2;
@@ -84,7 +84,7 @@ QTableView {
     border: none;
     gridline-color: transparent;
     color: %4;
-    selection-background-color: rgba(184,184,184,0.08);
+    selection-background-color: rgba(160,160,160,0.08);
     selection-color: %4;
     outline: none;
 }
@@ -109,12 +109,12 @@ QScrollBar:vertical {
     margin: 2px;
 }
 QScrollBar::handle:vertical {
-    background: rgba(184,184,184,0.15);
+    background: rgba(160,160,160,0.15);
     border-radius: 4px;
     min-height: 30px;
 }
 QScrollBar::handle:vertical:hover {
-    background: rgba(184,184,184,0.28);
+    background: rgba(160,160,160,0.28);
 }
 QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
     height: 0;
@@ -125,7 +125,7 @@ QScrollBar:horizontal {
     margin: 2px;
 }
 QScrollBar::handle:horizontal {
-    background: rgba(184,184,184,0.15);
+    background: rgba(160,160,160,0.15);
     border-radius: 4px;
     min-width: 30px;
 }
@@ -150,7 +150,7 @@ QComboBox QAbstractItemView {
     background-color: %6;
     border: 1px solid %3;
     border-radius: 8px;
-    selection-background-color: rgba(184,184,184,0.10);
+    selection-background-color: rgba(160,160,160,0.10);
     selection-color: %4;
     outline: none;
 }
@@ -162,14 +162,14 @@ QPushButton {
     color: %4;
 }
 QPushButton:hover {
-    background-color: rgba(184,184,184,0.08);
+    background-color: rgba(160,160,160,0.08);
 }
 QPushButton:pressed {
-    background-color: rgba(184,184,184,0.12);
+    background-color: rgba(160,160,160,0.12);
 }
 QPushButton#accentButton {
     background-color: %7;
-    color: #141414;
+    color: #111111;
     border: none;
     font-weight: 600;
 }
@@ -183,7 +183,7 @@ QToolButton#transportButton {
     padding: 6px;
 }
 QToolButton#transportButton:hover {
-    background-color: rgba(184,184,184,0.08);
+    background-color: rgba(160,160,160,0.08);
 }
 QToolButton#transportButton:checked {
     color: %7;
@@ -191,7 +191,7 @@ QToolButton#transportButton:checked {
 QSlider::groove:horizontal {
     height: 4px;
     border-radius: 2px;
-    background: rgba(184,184,184,0.14);
+    background: rgba(160,160,160,0.14);
 }
 QSlider::sub-page:horizontal {
     background: %7;
@@ -211,7 +211,7 @@ QSlider::handle:horizontal:hover {
 QSlider::groove:vertical {
     width: 4px;
     border-radius: 2px;
-    background: rgba(184,184,184,0.14);
+    background: rgba(160,160,160,0.14);
 }
 QSlider::sub-page:vertical {
     background: %7;
@@ -237,7 +237,7 @@ QMenu::item {
     color: %4;
 }
 QMenu::item:selected {
-    background-color: rgba(184,184,184,0.10);
+    background-color: rgba(160,160,160,0.10);
 }
 QMenu::separator {
     height: 1px;
@@ -271,10 +271,10 @@ QListWidget#browseList::item, QListWidget#playlistNav::item {
     margin: 2px;
 }
 QListWidget#browseList::item:hover, QListWidget#playlistNav::item:hover {
-    background-color: rgba(184,184,184,0.05);
+    background-color: rgba(160,160,160,0.05);
 }
 QListWidget#browseList::item:selected, QListWidget#playlistNav::item:selected {
-    background-color: rgba(184,184,184,0.10);
+    background-color: rgba(160,160,160,0.10);
 }
 QScrollArea {
     background: transparent;
@@ -372,10 +372,10 @@ QListWidget#albumGrid::item {
     padding: 10px;
 }
 QListWidget#albumGrid::item:hover {
-    background-color: rgba(184,184,184,0.05);
+    background-color: rgba(160,160,160,0.05);
 }
 QListWidget#albumGrid::item:selected {
-    background-color: rgba(184,184,184,0.10);
+    background-color: rgba(160,160,160,0.10);
 }
 )").arg(m_base.name(QColor::HexRgb), m_surface.name(QColor::HexRgb), m_border.name(QColor::HexRgb),
           m_textPrimary.name(QColor::HexRgb), m_textSecondary.name(QColor::HexRgb),

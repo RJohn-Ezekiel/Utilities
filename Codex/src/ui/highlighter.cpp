@@ -27,14 +27,14 @@ MarkdownHighlighter::MarkdownHighlighter(QTextDocument *parent)
     m_italicFormat.setFontItalic(true);
 
     m_strikethroughFormat.setFontStrikeOut(true);
-    m_strikethroughFormat.setForeground(QColor("#888888"));
+    m_strikethroughFormat.setForeground(QColor("#A0A0A0"));
 
     m_underlineFormat.setFontUnderline(true);
 
-    m_codeFormat.setBackground(QColor("#2D2D2D"));
-    m_codeFormat.setForeground(QColor("#D8D8D8"));
+    m_codeFormat.setBackground(QColor("#333333"));
+    m_codeFormat.setForeground(QColor("#C4C4C4"));
 
-    m_codeBlockFormat.setForeground(QColor("#D8D8D8"));
+    m_codeBlockFormat.setForeground(QColor("#C4C4C4"));
     m_codeBlockFormat.setFontFamilies({QStringLiteral("JetBrains Mono")});
 
     m_linkFormat.setForeground(QColor(style::ACCENT));
@@ -44,10 +44,10 @@ MarkdownHighlighter::MarkdownHighlighter(QTextDocument *parent)
     m_wikiLinkFormat.setUnderlineStyle(QTextCharFormat::SingleUnderline);
     m_wikiLinkFormat.setFontWeight(QFont::Bold);
 
-    m_imageFormat.setForeground(QColor("#888888"));
+    m_imageFormat.setForeground(QColor("#A0A0A0"));
     m_imageFormat.setFontItalic(true);
 
-    m_blockquoteFormat.setForeground(QColor("#888888"));
+    m_blockquoteFormat.setForeground(QColor("#A0A0A0"));
     m_blockquoteFormat.setFontItalic(true);
 
     m_checkboxFormat.setForeground(QColor(style::ACCENT));
@@ -59,7 +59,7 @@ MarkdownHighlighter::MarkdownHighlighter(QTextDocument *parent)
     m_tagFormat.setFontWeight(QFont::Bold);
 
     QTextCharFormat alignFormat;
-    alignFormat.setForeground(QColor("#888888"));
+    alignFormat.setForeground(QColor("#A0A0A0"));
     alignFormat.setFontItalic(true);
 
     // Build rules (applied in order, last wins for overlapping)

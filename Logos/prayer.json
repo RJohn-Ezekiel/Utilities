@@ -1,0 +1,88 @@
+[
+  {
+    "title": "Pater Noster",
+    "category": "Daily",
+    "latin": "Pater noster, qui es in caelis,\nsanctificetur nomen tuum.\nAdveniat regnum tuum.\nFiat voluntas tua, sicut in caelo et in terra.\nPanem nostrum quotidianum da nobis hodie.\nEt dimitte nobis debita nostra, sicut et nos dimittimus debitoribus nostris.\nEt ne nos inducas in tentationem,\nsed libera nos a malo. Amen.",
+    "english": "Our Father, who art in heaven,\nhallowed be thy name.\nThy kingdom come.\nThy will be done, on earth as it is in heaven.\nGive us this day our daily bread.\nAnd forgive us our trespasses, as we forgive those who trespass against us.\nAnd lead us not into temptation,\nbut deliver us from evil. Amen.",
+    "tags": ["lord", "daily", "foundational"],
+    "source": "Matthew 6:9-13"
+  },
+  {
+    "title": "Ave Maria",
+    "category": "Daily",
+    "latin": "Ave Maria, gratia plena,\nDominus tecum.\nBenedicta tu in mulieribus,\net benedictus fructus ventris tui, Iesus.\nSancta Maria, Mater Dei,\nora pro nobis peccatoribus,\nnunc et in hora mortis nostrae. Amen.",
+    "english": "Hail Mary, full of grace,\nthe Lord is with thee.\nBlessed art thou among women,\nand blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God,\npray for us sinners,\nnow and at the hour of our death. Amen.",
+    "tags": ["mary", "daily"]
+  },
+  {
+    "title": "Gloria Patri",
+    "category": "Daily",
+    "latin": "Gloria Patri, et Filio,\net Spiritui Sancto.\nSicut erat in principio,\net nunc, et semper,\net in saecula saeculorum. Amen.",
+    "english": "Glory be to the Father,\nand to the Son,\nand to the Holy Spirit.\nAs it was in the beginning,\nis now, and ever shall be,\nworld without end. Amen.",
+    "tags": ["trinity", "daily"]
+  },
+  {
+    "title": "Signum Crucis",
+    "category": "Daily",
+    "latin": "In nomine Patris, et Filii,\net Spiritus Sancti. Amen.",
+    "english": "In the name of the Father,\nand of the Son,\nand of the Holy Spirit. Amen.",
+    "tags": ["sign", "daily"]
+  },
+  {
+    "title": "Angelus",
+    "category": "Daily",
+    "latin": "Angelus Domini nuntiavit Mariae:\net concepit de Spiritu Sancto.\n\nAve Maria...\n\nEcce ancilla Domini:\nfiat mihi secundum verbum tuum.\n\nAve Maria...\n\nEt Verbum caro factum est:\net habitavit in nobis.\n\nAve Maria...\n\nOra pro nobis, Sancta Dei Genetrix:\nut digni efficiamur promissionibus Christi.\n\nOremus.\nGratiam tuam, quaesumus Domine, mentibus nostris infunde:\nqui, Angelo nuntiante, Christi Filii tui incarnationem cognovimus,\nut per passionem eius et crucem,\nad resurrectionis gloriam perducamur.\nPer eundem Christum Dominum nostrum. Amen.",
+    "english": "The Angel of the Lord declared unto Mary:\nand she conceived of the Holy Spirit.\n\nHail Mary...\n\nBehold the handmaid of the Lord:\nbe it done unto me according to thy word.\n\nHail Mary...\n\nAnd the Word was made flesh:\nand dwelt among us.\n\nHail Mary...\n\nPray for us, O holy Mother of God:\nthat we may be made worthy of the promises of Christ.\n\nLet us pray.\nPour forth, we beseech thee, O Lord, thy grace into our hearts:\nthat we, to whom the incarnation of Christ thy Son was made known by the message of an angel,\nmay by his passion and cross\nbe brought to the glory of his resurrection.\nThrough the same Christ our Lord. Amen.",
+    "tags": ["mary", "incarnation", "morning", "evening"],
+    "source": "Traditional"
+  },
+  {
+    "title": "Sub Tuum Praesidium",
+    "category": "Mary",
+    "latin": "Sub tuum praesidium confugimus,\nSancta Dei Genetrix.\nNostras deprecationes ne despicias in necessitatibus,\nsed a periculis cunctis libera nos semper,\nVirgo gloriosa et benedicta. Amen.",
+    "english": "We fly to thy protection,\nO Holy Mother of God.\nDespise not our petitions in our necessities,\nbut deliver us always from all dangers,\nO glorious and blessed Virgin. Amen.",
+    "tags": ["mary", "protection"]
+  },
+  {
+    "title": "Anima Christi",
+    "category": "Eucharist",
+    "latin": "Anima Christi, sanctifica me.\nCorpus Christi, salva me.\nSanguis Christi, inebria me.\nAqua lateris Christi, lava me.\nPassio Christi, conforta me.\nO bone Iesu, exaudi me.\nIntra tua vulnera absconde me.\nNe permittas me separari a te.\nAb hoste maligno defende me.\nIn hora mortis meae voca me.\nEt iube me venire ad te,\nut cum sanctis tuis laudem te\nin saecula saeculorum. Amen.",
+    "english": "Soul of Christ, sanctify me.\nBody of Christ, save me.\nBlood of Christ, inebriate me.\nWater from the side of Christ, wash me.\nPassion of Christ, strengthen me.\nO good Jesus, hear me.\nWithin thy wounds hide me.\nSuffer me not to be separated from thee.\nFrom the malignant enemy defend me.\nIn the hour of my death call me.\nAnd bid me come to thee,\nthat with thy saints I may praise thee\nfor ever and ever. Amen.",
+    "tags": ["eucharist", "communion"]
+  },
+  {
+    "title": "Veni Sancte Spiritus",
+    "category": "Holy Spirit",
+    "latin": "Veni, Sancte Spiritus,\nreple tuorum corda fidelium,\net tui amoris in eis ignem accende.\n\nVeni, Pater pauperum,\nveni, dator munerum,\nveni, lumen cordium.\n\nConsolator optime,\ndulcis hospes animae,\ndulce refrigerium.\n\nIn labore requies,\nin aestu temperies,\nin fletu solatium.\n\nO lux beatissima,\nreple cordis intima\ntuorum fidelium.\n\nDa tuis fidelibus,\nin te confidentibus,\nsacrum septenarium.\n\nDa virtutis meritum,\nda salutis exitum,\nda perenne gaudium. Amen.",
+    "english": "Come, Holy Spirit,\nfill the hearts of thy faithful,\nand enkindle in them the fire of thy love.\n\nCome, Father of the poor,\ncome, giver of gifts,\ncome, light of hearts.\n\nO best of comforters,\nsweet guest of the soul,\nsweet refreshment.\n\nIn labor, rest;\nin heat, temperance;\nin tears, consolation.\n\nO most blessed light,\nfill the inmost hearts\nof thy faithful.\n\nGrant to thy faithful,\nwho put their trust in thee,\nthe sacred sevenfold gifts.\n\nGrant the reward of virtue,\ngrant the grace of salvation,\ngrant eternal joy. Amen.",
+    "tags": ["holy spirit", "pentecost"]
+  },
+  {
+    "title": "Confiteor",
+    "category": "Penance",
+    "latin": "Confiteor Deo omnipotenti,\nbeatae Mariae semper Virgini,\nbeato Michaeli Archangelo,\nbeato Ioanni Baptistae,\nsanctis Apostolis Petro et Paulo,\n[omnibus sanctis] et tibi, Pater,\nquia peccavi nimis\ncogitatione, verbo et opere:\nmea culpa, mea culpa,\nmea maxima culpa.\nIdeo precor beatam Mariam semper Virginem,\nbeatum Michaelem Archangelum,\nbeatum Ioannem Baptistam,\nsanctos Apostolos Petrum et Paulum,\n[omnes sanctos] et te, Pater,\norare pro me ad Dominum Deum nostrum.",
+    "english": "I confess to almighty God,\nto blessed Mary ever Virgin,\nto blessed Michael the Archangel,\nto blessed John the Baptist,\nto the holy Apostles Peter and Paul,\n[to all the saints] and to you, Father,\nthat I have sinned exceedingly\nin thought, word and deed:\nthrough my fault, through my fault,\nthrough my most grievous fault.\nTherefore I beseech blessed Mary ever Virgin,\nblessed Michael the Archangel,\nblessed John the Baptist,\nthe holy Apostles Peter and Paul,\n[all the saints] and you, Father,\nto pray for me to the Lord our God.",
+    "tags": ["confession", "penance"]
+  },
+  {
+    "title": "Sancte Michael Archangele",
+    "category": "Protection",
+    "latin": "Sancte Michael Archangele,\ndefende nos in proelio;\ncontra nequitiam et insidias diaboli esto praesidium.\nImperet illi Deus, supplices deprecamur:\ntuque, Princeps militiae caelestis,\nSatanam aliosque spiritus malignos,\nqui ad perditionem animarum pervagantur in mundo,\ndivina virtute, in infernum detrude. Amen.",
+    "english": "Saint Michael the Archangel,\ndefend us in battle;\nbe our protection against the wickedness and snares of the devil.\nMay God rebuke him, we humbly pray:\nand do thou, O Prince of the heavenly host,\nby the divine power of God,\ncast into hell Satan and all the evil spirits\nwho prowl about the world seeking the ruin of souls. Amen.",
+    "tags": ["michael", "protection", "spiritual warfare"]
+  },
+  {
+    "title": "Memorare",
+    "category": "Mary",
+    "latin": "Memorare, o piissima Virgo Maria,\nnon esse auditum a saeculo,\nquemquam ad tua currentem praesidia,\ntua implorantem auxilia,\ntua petentem suffragia,\nesse derelictum.\nEgo tali animatus confidentia,\nad te, Virgo Virginum, Mater, curro;\nad te venio, coram te gemens peccator assisto.\nNoli, Mater Verbi, verba mea despicere,\nsed audi propitia et exaudi. Amen.",
+    "english": "Remember, O most gracious Virgin Mary,\nthat never was it known\nthat anyone who fled to thy protection,\nimplored thy help,\nor sought thy intercession\nwas left unaided.\nInspired by this confidence,\nI fly unto thee, O Virgin of virgins, my Mother;\nto thee do I come, before thee I stand, sinful and sorrowful.\nO Mother of the Word Incarnate,\ndespise not my petitions,\nbut in thy mercy hear and answer me. Amen.",
+    "tags": ["mary", "intercession"]
+  },
+  {
+    "title": "Ora pro Nobis",
+    "category": "Mary",
+    "latin": "Ora pro nobis, Sancta Dei Genetrix,\nut digni efficiamur promissionibus Christi.\n\nOra pro nobis, beata Virgo Maria,\nut digni efficiamur promissionibus Christi.",
+    "english": "Pray for us, O holy Mother of God,\nthat we may be made worthy of the promises of Christ.\n\nPray for us, O blessed Virgin Mary,\nthat we may be made worthy of the promises of Christ.",
+    "tags": ["mary", "intercession"]
+  }
+]

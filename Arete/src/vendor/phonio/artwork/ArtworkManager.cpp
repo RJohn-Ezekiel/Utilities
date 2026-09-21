@@ -101,7 +101,7 @@ QImage ArtworkManager::makePlaceholder(int size) const
     font.setPixelSize(size * 0.55);
     font.setWeight(QFont::Light);
     p.setFont(font);
-    const QString glyph = QString();
+    const QString glyph = QStringLiteral("\u266B");
     const QRectF rect(0, 0, size, size);
     p.drawText(rect, Qt::AlignCenter, glyph);
     return image;

@@ -23,6 +23,7 @@ signals:
     void skipBreakClicked();
     void settingsClicked();
     void miniModeClicked();
+    void updateClicked();
 
 private:
     QPushButton* m_startBtn = nullptr;
@@ -32,6 +33,7 @@ private:
     QPushButton* m_skipBreakBtn = nullptr;
     QPushButton* m_miniModeBtn = nullptr;
     QPushButton* m_settingsBtn = nullptr;
+    QPushButton* m_updateBtn = nullptr;
 };
 
 } // namespace chronos

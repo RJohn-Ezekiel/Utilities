@@ -102,6 +102,8 @@ LibraryPage::LibraryPage(LibraryManager* library, PlaybackController* controller
             &LibraryPage::editMetadataRequested);
     connect(m_table, &SongTableView::attachLyricsRequested, this,
             &LibraryPage::attachLyricsRequested);
+    connect(m_table, &SongTableView::editLyricsRequested, this,
+            &LibraryPage::editLyricsRequested);
     connect(m_table, &SongTableView::setRatingRequested, this,
             [this](qint64 id, int rating) {
                 if (const auto track = m_library->trackById(id))

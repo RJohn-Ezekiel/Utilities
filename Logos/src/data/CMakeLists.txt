@@ -5,7 +5,9 @@ add_library(bible_data
     VulgateImporter.cpp
     BookNameMatcher.cpp
     Loader.cpp
+    PrayerLibrary.cpp
+    HymnLibrary.cpp
 )
 
 target_include_directories(bible_data PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(bible_data PUBLIC bible_core Qt6::Core)
+target_link_libraries(bible_data PUBLIC bible_core AreteCore Qt6::Core)

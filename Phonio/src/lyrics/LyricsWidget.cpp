@@ -42,7 +42,6 @@ void LyricsWidget::setDocument(const LyricsDocument& doc)
 {
     m_document = doc;
     m_activeLine = -1;
-    m_lastPositionMs = -1;
     m_scrollAnimation->stop();
     rebuildLabels();
 }
@@ -74,7 +73,7 @@ void LyricsWidget::showNoLyricsMessage()
 {
     auto* label = new QLabel(tr("No synchronized lyrics available."), m_content);
     label->setAlignment(Qt::AlignCenter);
-    label->setStyleSheet(QStringLiteral("color: rgba(184,184,184,100); font-size: 16px;"));
+    label->setStyleSheet(QStringLiteral("color: rgba(160,160,160,100); font-size: 16px;"));
     label->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     m_layout->addWidget(label);
     m_labels.append(label);
@@ -89,19 +88,19 @@ void LyricsWidget::applyLineStyles(int activeLine)
         if (i == activeLine) {
             font.setPixelSize(kFontSizeCurrent);
             font.setWeight(QFont::DemiBold);
-            color = QStringLiteral("color: #d8d8d8;");
+            color = QStringLiteral("color: #D0D0D0;");
         } else if (i == activeLine - 1 || i == activeLine + 1) {
             font.setPixelSize(kFontSizeNormal);
             font.setWeight(QFont::Normal);
-            color = QStringLiteral("color: rgba(184,184,184,160);");
+            color = QStringLiteral("color: rgba(160,160,160,160);");
         } else if (i < activeLine) {
             font.setPixelSize(kFontSizeNormal);
             font.setWeight(QFont::Normal);
-            color = QStringLiteral("color: rgba(184,184,184,110);");
+            color = QStringLiteral("color: rgba(160,160,160,110);");
         } else {
             font.setPixelSize(kFontSizeNormal);
             font.setWeight(QFont::Normal);
-            color = QStringLiteral("color: rgba(184,184,184,80);");
+            color = QStringLiteral("color: rgba(160,160,160,80);");
         }
         label->setFont(font);
         label->setStyleSheet(color);
@@ -113,9 +112,6 @@ void LyricsWidget::setPosition(qint64 positionMs)
     if (m_document.isEmpty() || m_labels.size() != m_document.lines.size())
         return;
     const int active = LyricsParser::activeLine(m_document, positionMs);
-    if (active == m_activeLine && m_lastPositionMs == positionMs)
-        return;
-    m_lastPositionMs = positionMs;
 
     if (active != m_activeLine) {
         m_activeLine = active;
@@ -124,7 +120,8 @@ void LyricsWidget::setPosition(qint64 positionMs)
 
     if (active >= 0) {
         const QLabel* label = m_labels.at(active);
-        const int target = label->y() - kCenterPadding;
+        const int viewportH = viewport()->height();
+        const int target = label->y() - (viewportH - label->height()) / 2;
         if (m_scrollAnimation->state() == QAbstractAnimation::Running)
             m_scrollAnimation->stop();
         animateScrollTo(qMax(0, target));

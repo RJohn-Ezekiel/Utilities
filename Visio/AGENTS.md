@@ -17,33 +17,39 @@ cmake --build build -j$(nproc)
 
 Shared across Chronos, Codex, Logos, and Visio projects.
 
-| Token       | Hex       | Purpose                     |
-|-------------|-----------|-----------------------------|
-| background  | `#1B1B1B` | Main window / primary bg    |
-| panel       | `#232323` | Panel / sidebar / card      |
-| readingArea | `#202020` | Reading pane / video list   |
-| toolbar     | `#252526` | Toolbar, status bar         |
-| input       | `#333333` | Input fields (search bar)   |
-| hover       | `#2E2E2E` | Hover state                 |
-| selection   | `#3A3D41` | Selected item highlight     |
-| border      | `#353535` | Borders, separators         |
-| primaryText | `#D8D8D8` | Primary / heading text      |
-| secondary   | `#A9A9A9` | Secondary / muted text      |
-| accent      | `#7A8A9A` | Muted blue-grey accent      |
-| accentDim   | `#5A6672` | Accent dimmed (pressed)     |
-| success     | `#5A8A5A` | Success / positive          |
-| warning     | `#B8A060` | Warning / caution           |
-| error       | `#8A4A4A` | Error / destructive         |
-| errorBg     | `#402020` | Error background            |
+| Token         | Hex       | Purpose                     |
+|---------------|-----------|-----------------------------|
+| background    | `#111111` | Main window / primary bg    |
+| panel         | `#242424` | Panel / sidebar / card      |
+| readingArea   | `#181818` | Reading pane / video list   |
+| toolbar       | `#242424` | Toolbar, status bar         |
+| input         | `#333333` | Input fields (search bar)   |
+| hover         | `#2E2E2E` | Hover state                 |
+| selection     | `#3A3A3A` | Selected item highlight     |
+| border        | `#353535` | Borders, separators         |
+| primaryText   | `#C4C4C4` | Primary / heading text      |
+| secondaryText | `#A0A0A0` | Secondary / muted text      |
+| accent        | `#D0D0D0` | Accent — grey               |
+| accentDim     | `#B0B0B0` | Accent dimmed (pressed)     |
+| success       | `#6AA06A` | Success / positive          |
+| warning       | `#C4A050` | Warning / caution           |
+| error         | `#C45050` | Error / destructive         |
+| errorBg       | `#3A1A1A` | Error background            |
 
-Defined in `include/visio/ui/Theme.h` as `constexpr QColor`.
+Defined in `include/visio/ui/Theme.h` as `constexpr QColor`. This is the unified Arete spec palette, also used by Logos, Chronos, and Codex.
 
 ## Public API
 
 ```cpp
 visio::Client yt;
 auto results = yt.search("query");
+auto meta = yt.getVideo("VIDEO_ID");   // yt-dlp --dump-json
+auto dl = yt.download(video, dir, Quality::Best);
+auto dlMp3 = yt.downloadAudio(video, dir);
+auto upd = yt.updateYtDlp();           // runs `yt-dlp -U`
 ```
+
+GUI note: list thumbnails load asynchronously via `MainWindow::loadThumbnail` (per-URL cache in `m_thumbnailCache`; items carry the URL in `Qt::UserRole + 1`). "Failed to fetch"-style download errors usually mean a stale `yt-dlp` — the toolbar has an **Update yt-dlp** button and download failures hint at it.
 
 ## Code Conventions
 

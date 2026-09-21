@@ -17,6 +17,10 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
 
+if(NOT TARGET AreteCore)
+    find_package(AreteCore REQUIRED)
+endif()
+
 add_subdirectory(src)
 
 option(CODEX_BUILD_TESTS "Build tests" OFF)

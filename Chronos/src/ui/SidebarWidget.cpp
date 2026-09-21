@@ -29,6 +29,7 @@ SidebarWidget::SidebarWidget(QWidget* parent)
     addBtn(QStringLiteral("History"), History);
     addBtn(QStringLiteral("Statistics"), Statistics);
     addBtn(QStringLiteral("Settings"), Settings);
+    addBtn(QStringLiteral("Diagnostics"), Diagnostics);
 
     layout->addStretch();
     updateButtonStates();

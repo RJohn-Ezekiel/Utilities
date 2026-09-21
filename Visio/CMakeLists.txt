@@ -49,6 +49,11 @@ find_package(Qt6 COMPONENTS Widgets Network REQUIRED)
 message(STATUS "Found Qt6: ${Qt6_VERSION}")
 set(VISIO_QT_FOUND TRUE)
 
+# AreteCore (shared core library)
+if(NOT TARGET AreteCore)
+    find_package(AreteCore REQUIRED)
+endif()
+
 # ============================================================================
 # Library
 # ============================================================================
@@ -118,4 +123,4 @@ endif()
 
 file(GLOB_RECURSE VISIO_GUI_HEADERS src/gui/*.hpp src/gui/*.h)
 add_executable(visio_gui ${VISIO_GUI_SOURCES} ${VISIO_GUI_HEADERS})
-target_link_libraries(visio_gui PRIVATE visio Qt6::Widgets Qt6::Network)
+target_link_libraries(visio_gui PRIVATE visio Qt6::Widgets Qt6::Network AreteCore)

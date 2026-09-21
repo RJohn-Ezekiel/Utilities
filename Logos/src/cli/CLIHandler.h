@@ -15,6 +15,8 @@ public:
         Search,
         Random,
         Daily,
+        Prayer,
+        Hymn,
         Reference
     };
 

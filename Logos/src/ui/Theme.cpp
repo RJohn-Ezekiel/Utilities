@@ -41,7 +41,7 @@ QString styleSheet()
         "  font-size: 12px;"
         "}"
         "QLineEdit {"
-        "  background-color: %1;"
+        "  background-color: %12;"
         "  color: %2;"
         "  border: 1px solid %3;"
         "  padding: 4px 8px;"
@@ -141,10 +141,10 @@ QString styleSheet()
         "  background-color: %5;"
         "}"
         "QPushButton:pressed {"
-        "  background-color: %8;"
+        "  background-color: %13;"
         "}"
         "QComboBox {"
-        "  background-color: %1;"
+        "  background-color: %12;"
         "  color: %2;"
         "  border: 1px solid %3;"
         "  padding: 4px 8px;"
@@ -215,7 +215,9 @@ QString styleSheet()
         .arg(accent().name())
         .arg(readingArea.name())
         .arg(sidebar.name())
-        .arg(hover.name());
+        .arg(hover.name())
+        .arg(input.name())
+        .arg(accentDim.name());
 }
 
 void apply()

@@ -12,6 +12,8 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QAction>
+#include "arete/dialogs/DiagnosticsDialog.h"
+#include "arete/update/UpdateService.h"
 #include <QInputDialog>
 #include <QMessageBox>
 #include <QApplication>
@@ -173,13 +175,21 @@ void MainWindow::setupToolbar(QToolBar *toolbar)
     auto *deleteAction = toolbar->addAction(QStringLiteral("Delete"));
     connect(deleteAction, &QAction::triggered, this, &MainWindow::deleteNote);
 
+    // Mode selector: Source / Reading View
     auto *modeAction = toolbar->addAction(QStringLiteral("Reading View"));
-    modeAction->setCheckable(true);
     modeAction->setShortcut(QKeySequence(Qt::Key_F5));
-    connect(modeAction, &QAction::toggled, this, [this](bool checked) {
-        m_editor->setMode(checked ? Editor::Preview : Editor::Source);
+    modeAction->setToolTip(QStringLiteral(
+        "Toggle editing mode (F5)\n"
+        "Source: raw Markdown\n"
+        "Reading View: preview only"));
+    connect(modeAction, &QAction::triggered, this, [this]() {
+        const Editor::Mode current = m_editor->mode();
+        const Editor::Mode next = current == Editor::Source ? Editor::Preview : Editor::Source;
+        m_editor->setMode(next);
         if (auto *action = qobject_cast<QAction*>(sender())) {
-            action->setText(checked ? QStringLiteral("Source") : QStringLiteral("Reading View"));
+            action->setText(next == Editor::Source
+                                ? QStringLiteral("Reading View")
+                                : QStringLiteral("Source"));
         }
     });
 
@@ -213,6 +223,18 @@ void MainWindow::setupToolbar(QToolBar *toolbar)
 
     auto *helpAction = toolbar->addAction(QStringLiteral("Help"));
     connect(helpAction, &QAction::triggered, this, &MainWindow::showHelp);
+
+    auto *diagAction = toolbar->addAction(QStringLiteral("Diagnostics"));
+    diagAction->setToolTip(QStringLiteral("Open the log viewer and notification center"));
+    connect(diagAction, &QAction::triggered, this, [this]() {
+        arete::dialogs::DiagnosticsDialog::openDialog(this);
+    });
+
+    auto *updateAction = toolbar->addAction(QStringLiteral("Update"));
+    updateAction->setToolTip(QStringLiteral("Check the build tree for a newer version and install it"));
+    connect(updateAction, &QAction::triggered, this, [this]() {
+        arete::update::UpdateService::promptAndApply(this, "codex");
+    });
 }
 
 void MainWindow::onNoteSelected(const std::filesystem::path &path)
@@ -236,6 +258,17 @@ void MainWindow::onNoteSelected(const std::filesystem::path &path)
         QString::fromStdString(note.path.string())));
 
     updatePanels();
+}
+
+void MainWindow::openNote(const QString &title)
+{
+    if (!m_vault) return;
+    const auto path = m_vault->resolveWikiLink(title.toStdString());
+    if (path.has_value()) {
+        onNoteSelected(*path);
+    } else {
+        m_statusLabel->setText(QStringLiteral("Note not found: %1").arg(title));
+    }
 }
 
 void MainWindow::onNoteSaved(const std::filesystem::path &path)
@@ -1223,20 +1256,20 @@ void MainWindow::showHelp()
     auto *browser = new QTextBrowser(&dlg);
     browser->setOpenExternalLinks(true);
     browser->setStyleSheet(QStringLiteral(
-        "QTextBrowser { background: #1B1B1B; color: #D8D8D8; border: none; }"
-        "a { color: #8A8A8A; }"
+        "QTextBrowser { background: #111111; color: #C4C4C4; border: none; }"
+        "a { color: #B0B0B0; }"
     ));
 
     auto helpText = QStringLiteral(R"(
-<h2 style="color:#8A8A8A;">Markdown Syntax Reference</h2>
+<h2 style="color:#B0B0B0;">Markdown Syntax Reference</h2>
 
-<h3 style="color:#8A8A8A;">Headings</h3>
+<h3 style="color:#B0B0B0;">Headings</h3>
 <pre><code># Heading 1
 ## Heading 2
 ### Heading 3
 </code></pre>
 
-<h3 style="color:#8A8A8A;">Text Formatting</h3>
+<h3 style="color:#B0B0B0;">Text Formatting</h3>
 <pre><code>**bold**  __bold__
 *italic*  _italic_
 ~~strikethrough~~
@@ -1244,7 +1277,7 @@ void MainWindow::showHelp()
 `inline code`
 </code></pre>
 
-<h3 style="color:#8A8A8A;">Lists</h3>
+<h3 style="color:#B0B0B0;">Lists</h3>
 <pre><code>- Unordered item
 * Unordered item
 + Unordered item
@@ -1254,53 +1287,61 @@ void MainWindow::showHelp()
 - [x] Checked task
 </code></pre>
 
-<h3 style="color:#8A8A8A;">Links &amp; Wiki Links</h3>
+<h3 style="color:#B0B0B0;">Links &amp; Wiki Links</h3>
 <pre><code>[Link text](https://example.com)
 [[Wiki Link to another note]]
 </code></pre>
 
-<h3 style="color:#8A8A8A;">Images &amp; Media</h3>
+<h3 style="color:#B0B0B0;">Images &amp; Media</h3>
 <pre><code>![Alt text](path/to/image.png)
 &lt;video src="video.mp4" controls&gt;&lt;/video&gt;
 &lt;audio src="audio.mp3" controls&gt;&lt;/audio&gt;
 </code></pre>
 
-<h3 style="color:#8A8A8A;">Code Blocks</h3>
+<h3 style="color:#B0B0B0;">Code Blocks</h3>
 <pre><code>```
 code block
 multiple lines
 ```
 </code></pre>
 
-<h3 style="color:#8A8A8A;">Blockquotes</h3>
+<h3 style="color:#B0B0B0;">Blockquotes</h3>
 <pre><code>&gt; Quoted text
 &gt; Multiple lines
 </code></pre>
 
-<h3 style="color:#8A8A8A;">Horizontal Rule</h3>
+<h3 style="color:#B0B0B0;">Horizontal Rule</h3>
 <pre><code>---
 </code></pre>
 
-<h3 style="color:#8A8A8A;">Alignment</h3>
+<h3 style="color:#B0B0B0;">Alignment</h3>
 <pre><code>&lt;center&gt;Centered text&lt;/center&gt;
 &lt;p align="right"&gt;Right-aligned&lt;/p&gt;
 </code></pre>
 
-<h3 style="color:#8A8A8A;">Tags</h3>
+<h3 style="color:#B0B0B0;">Tags</h3>
 <pre><code>#tag  #project/feature
 </code></pre>
 
-<h3 style="color:#8A8A8A;">Checkboxes</h3>
+<h3 style="color:#B0B0B0;">Checkboxes</h3>
 <pre><code>Click on [ ] or [x] in the editor to toggle.
 Rendered as ☐ ☑ in preview.
 </code></pre>
 
-<h3 style="color:#8A8A8A;">Keyboard Shortcuts</h3>
+<h3 style="color:#B0B0B0;">Editing Modes</h3>
+<p><b>Source</b> view edits the raw Markdown. <b>Reading View</b> shows the
+rendered document exactly as it will look in the final output.</p>
+<pre><code>F5          Cycle: Source ↔ Reading View
+Escape      Back to Source from Reading View
+Click ☐/☑   Toggle task list checkbox in the editor
+</code></pre>
+
+<h3 style="color:#B0B0B0;">Keyboard Shortcuts</h3>
 <pre><code>Ctrl+S      Save
 Ctrl+N      New note
-F5          Toggle Source/Reading View
-Escape      Back to Source from Reading View
-Tab         Insert 4 spaces
+F5          Toggle editing mode
+Escape      Back to Source
+Tab         Insert 4 spaces / indent list item
 </code></pre>
 )");
 
@@ -1308,7 +1349,7 @@ Tab         Insert 4 spaces
 
     auto *closeBtn = new QPushButton(QStringLiteral("Close"), &dlg);
     closeBtn->setStyleSheet(QStringLiteral(
-        "QPushButton { background: #8A8A8A; color: #1B1B1B; padding: 6px 20px;"
+        "QPushButton { background: #D0D0D0; color: #111111; padding: 6px 20px;"
         "border: none; border-radius: 4px; font-weight: bold; }"
     ));
     connect(closeBtn, &QPushButton::clicked, &dlg, &QDialog::accept);

@@ -1,5 +1,9 @@
 #include "MainWindow.hpp"
+#include <visio/playlist.hpp>
 #include <visio/ui/Theme.h>
+
+#include "arete/dialogs/DiagnosticsDialog.h"
+#include "arete/update/UpdateService.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -18,6 +22,9 @@
 #include <QFont>
 #include <QScrollArea>
 #include <QDialog>
+#include <QTimer>
+#include <QSettings>
+#include <QClipboard>
 
 #include <thread>
 #include <format>
@@ -38,6 +45,21 @@ QString formatViews(std::uint64_t views)
     return QString::number(views);
 }
 
+// Wrap a download error with a hint when the cause is likely a stale yt-dlp.
+QString downloadFailure(const Error& err)
+{
+    const QString msg = QString::fromStdString(err.message());
+    const QString lower = msg.toLower();
+    if (lower.contains(QLatin1String("fetch")) ||
+        lower.contains(QLatin1String("unable to extract")) ||
+        lower.contains(QLatin1String("sign in")) ||
+        lower.contains(QLatin1String("login required"))) {
+        return QStringLiteral("Download failed: %1 — try the \"Update yt-dlp\" button (stale binary) or the video may be unavailable.")
+            .arg(msg);
+    }
+    return QStringLiteral("Download failed: %1").arg(msg);
+}
+
 } // namespace
 
 MainWindow::MainWindow(QWidget* parent)
@@ -50,6 +72,47 @@ MainWindow::MainWindow(QWidget* parent)
     setStyleSheet(Theme::appStyleSheet());
 
     setupUi();
+
+    // Remember the last selected format (QSettings).
+    QSettings settings(QStringLiteral("Arete"), QStringLiteral("Visio"));
+    const int savedQuality = settings.value(QStringLiteral("qualityIndex"), -1).toInt();
+    if (savedQuality >= 0 && savedQuality < m_qualitySelector->count()) {
+        m_qualitySelector->setCurrentIndex(savedQuality);
+    }
+    connect(m_qualitySelector, &QComboBox::currentIndexChanged, this, [this](int index) {
+        QSettings s(QStringLiteral("Arete"), QStringLiteral("Visio"));
+        s.setValue(QStringLiteral("qualityIndex"), index);
+    });
+
+    // Clipboard watch (toggled from the toolbar).
+    m_clipboardTimer = new QTimer(this);
+    m_clipboardTimer->setInterval(3000);
+    connect(m_clipboardTimer, &QTimer::timeout, this, [this]() {
+        const QString text = QApplication::clipboard()->text().trimmed();
+        if (text.isEmpty() || text == m_lastClipboardText) return;
+        m_lastClipboardText = text;
+        const bool looksLikeVideo = text.startsWith(QLatin1String("http")) &&
+                                    (text.contains(QLatin1String("youtube.com")) ||
+                                     text.contains(QLatin1String("youtu.be")) ||
+                                     text.contains(QLatin1String("ytdl://")));
+        if (!looksLikeVideo) return;
+        auto* box = new QMessageBox(this);
+        box->setWindowTitle(QStringLiteral("Download from clipboard"));
+        box->setIcon(QMessageBox::Question);
+        box->setText(QStringLiteral("Start downloading this video?\n\n%1").arg(text));
+        box->setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+        box->setDefaultButton(QMessageBox::Yes);
+        box->setAttribute(Qt::WA_DeleteOnClose);
+        if (box->exec() == QMessageBox::Yes) {
+            addDownload(text);
+        }
+    });
+
+    // Wellness reminder every 45 minutes of app usage.
+    m_wellnessTimer = new QTimer(this);
+    m_wellnessTimer->setInterval(45 * 60 * 1000);
+    m_wellnessTimer->start();
+    connect(m_wellnessTimer, &QTimer::timeout, this, &MainWindow::onWellnessReminder);
 }
 
 MainWindow::~MainWindow() noexcept = default;
@@ -130,8 +193,13 @@ void MainWindow::setupUi()
     auto* historyRemoveBtn = new QPushButton("Remove Selected", this);
     historyRemoveBtn->setToolTip("Remove the selected item from history");
     connect(historyRemoveBtn, &QPushButton::clicked, this, &MainWindow::onRemoveSelected);
+    m_retryBtn = new QPushButton("Retry Failed", this);
+    m_retryBtn->setToolTip("Retry the most recently failed download");
+    m_retryBtn->setEnabled(false);
+    connect(m_retryBtn, &QPushButton::clicked, this, &MainWindow::onRetryFailed);
     historyBar->addWidget(historyRemoveBtn);
     historyBar->addWidget(historyInfoBtn);
+    historyBar->addWidget(m_retryBtn);
     historyBar->addWidget(m_clearHistoryBtn);
     leftLayout->addLayout(historyBar);
 
@@ -193,7 +261,7 @@ void MainWindow::setupUi()
     m_thumbnail = new QLabel(this);
     m_thumbnail->setFixedHeight(140);
     m_thumbnail->setAlignment(Qt::AlignCenter);
-    m_thumbnail->setStyleSheet("background-color: #232323; border-radius: 8px;");
+    m_thumbnail->setStyleSheet("background-color: #242424; border-radius: 8px;");
     m_thumbnail->setText("No video selected");
     detailLayout->addWidget(m_thumbnail);
 
@@ -206,16 +274,16 @@ void MainWindow::setupUi()
     detailLayout->addWidget(m_titleLabel);
 
     m_authorLabel = new QLabel(this);
-    m_authorLabel->setStyleSheet("color: #A9A9A9;");
+    m_authorLabel->setStyleSheet("color: #A0A0A0;");
     detailLayout->addWidget(m_authorLabel);
 
     auto* metaRow = new QHBoxLayout();
     m_durationLabel = new QLabel(this);
-    m_durationLabel->setStyleSheet("color: #8A8A8A;");
+    m_durationLabel->setStyleSheet("color: #B0B0B0;");
     m_viewsLabel = new QLabel(this);
-    m_viewsLabel->setStyleSheet("color: #9E9E9E;");
+    m_viewsLabel->setStyleSheet("color: #A0A0A0;");
     m_publishedLabel = new QLabel(this);
-    m_publishedLabel->setStyleSheet("color: #A9A9A9;");
+    m_publishedLabel->setStyleSheet("color: #A0A0A0;");
     metaRow->addWidget(m_durationLabel);
     metaRow->addWidget(m_viewsLabel);
     metaRow->addWidget(m_publishedLabel);
@@ -226,8 +294,8 @@ void MainWindow::setupUi()
     m_description->setReadOnly(true);
     m_description->setMaximumHeight(150);
     m_description->setStyleSheet(
-        "QTextEdit { background-color: #202020; border: 1px solid #353535; "
-        "border-radius: 4px; padding: 8px; color: #A9A9A9; }");
+        "QTextEdit { background-color: #242424; border: 1px solid #353535; "
+        "border-radius: 4px; padding: 8px; color: #A0A0A0; }");
     detailLayout->addWidget(m_description);
 
     // Action buttons
@@ -250,9 +318,9 @@ void MainWindow::setupUi()
 
     m_playBtn = new QPushButton("Play", this);
     m_playBtn->setStyleSheet(
-        "QPushButton { background-color: #8A8A8A; color: #1B1B1B; "
+        "QPushButton { background-color: #D0D0D0; color: #111111; "
         "font-weight: bold; padding: 8px 24px; border: none; border-radius: 4px; }"
-        "QPushButton:hover { background-color: #9A9A9A; }");
+        "QPushButton:hover { background-color: #B0B0B0; }");
     connect(m_playBtn, &QPushButton::clicked, this, &MainWindow::onPlay);
     topRow->addWidget(m_playBtn);
 
@@ -311,39 +379,85 @@ void MainWindow::setupToolbar()
     addToolBar(m_toolbar);
 
     auto* searchLabel = new QLabel(" Search: ", this);
-    searchLabel->setStyleSheet("color: #A9A9A9; font-weight: bold;");
+    searchLabel->setStyleSheet("color: #A0A0A0; font-weight: bold;");
     m_toolbar->addWidget(searchLabel);
 
     m_searchInput = new QLineEdit(this);
     m_searchInput->setPlaceholderText("Search YouTube...");
     m_searchInput->setMinimumWidth(300);
     m_searchInput->setStyleSheet(
-        "QLineEdit { background-color: #333333; color: #D8D8D8; "
+        "QLineEdit { background-color: #333333; color: #C4C4C4; "
         "border: 1px solid #353535; border-radius: 4px; "
         "padding: 6px 12px; font-size: 14px; }"
-        "QLineEdit:focus { border-color: #8A8A8A; }");
+        "QLineEdit:focus { border-color: #B0B0B0; }");
     m_toolbar->addWidget(m_searchInput);
 
     m_searchBtn = new QPushButton("Search", this);
     m_searchBtn->setStyleSheet(
-        "QPushButton { background-color: #8A8A8A; color: #1B1B1B; "
+        "QPushButton { background-color: #D0D0D0; color: #111111; "
         "font-weight: bold; padding: 6px 20px; border: none; "
         "border-radius: 4px; }"
-        "QPushButton:hover { background-color: #9A9A9A; }");
+        "QPushButton:hover { background-color: #B0B0B0; }");
     connect(m_searchBtn, &QPushButton::clicked, this, &MainWindow::onSearch);
     connect(m_searchInput, &QLineEdit::returnPressed, this, &MainWindow::onSearch);
     m_toolbar->addWidget(m_searchBtn);
 
     m_toolbar->addSeparator();
 
-    auto* helpBtn = new QPushButton("Help", this);
-    helpBtn->setStyleSheet(
-        "QPushButton { background-color: #333333; color: #A9A9A9; "
+    m_updateYtdlpBtn = new QPushButton("Update yt-dlp", this);
+    m_updateYtdlpBtn->setToolTip("Update the yt-dlp binary to the latest version (requires network)");
+    m_updateYtdlpBtn->setStyleSheet(
+        "QPushButton { background-color: #333333; color: #A0A0A0; "
         "padding: 6px 16px; border: 1px solid #353535; "
         "border-radius: 4px; }"
-        "QPushButton:hover { background-color: #3A3A3A; color: #D8D8D8; }");
+        "QPushButton:hover { background-color: #3A3A3A; color: #C4C4C4; }");
+    connect(m_updateYtdlpBtn, &QPushButton::clicked, this, &MainWindow::onUpdateYtdlp);
+    m_toolbar->addWidget(m_updateYtdlpBtn);
+
+    m_clipboardBtn = new QPushButton("Clipboard", this);
+    m_clipboardBtn->setCheckable(true);
+    m_clipboardBtn->setToolTip("Watch the clipboard: copying a YouTube URL asks to download it");
+    m_clipboardBtn->setStyleSheet(
+        "QPushButton { background-color: #333333; color: #A0A0A0; "
+        "padding: 6px 16px; border: 1px solid #353535; "
+        "border-radius: 4px; }"
+        "QPushButton:hover { background-color: #3A3A3A; color: #C4C4C4; }"
+        "QPushButton:checked { background-color: #D0D0D0; color: #111111; }");
+    connect(m_clipboardBtn, &QPushButton::toggled, this, &MainWindow::onClipboardToggle);
+    m_toolbar->addWidget(m_clipboardBtn);
+
+    auto* helpBtn = new QPushButton("Help", this);
+    helpBtn->setStyleSheet(
+        "QPushButton { background-color: #333333; color: #A0A0A0; "
+        "padding: 6px 16px; border: 1px solid #353535; "
+        "border-radius: 4px; }"
+        "QPushButton:hover { background-color: #3A3A3A; color: #C4C4C4; }");
     connect(helpBtn, &QPushButton::clicked, this, &MainWindow::onHelp);
     m_toolbar->addWidget(helpBtn);
+
+    auto* diagBtn = new QPushButton("Diagnostics", this);
+    diagBtn->setToolTip("Open the log viewer and notification center");
+    diagBtn->setStyleSheet(
+        "QPushButton { background-color: #333333; color: #A0A0A0; "
+        "padding: 6px 16px; border: 1px solid #353535; "
+        "border-radius: 4px; }"
+        "QPushButton:hover { background-color: #3A3A3A; color: #C4C4C4; }");
+    connect(diagBtn, &QPushButton::clicked, this, [this]() {
+        arete::dialogs::DiagnosticsDialog::openDialog(this);
+    });
+    m_toolbar->addWidget(diagBtn);
+
+    auto* updateBtn = new QPushButton("Update", this);
+    updateBtn->setToolTip("Check the build tree for a newer version and install it");
+    updateBtn->setStyleSheet(
+        "QPushButton { background-color: #333333; color: #A0A0A0; "
+        "padding: 6px 16px; border: 1px solid #353535; "
+        "border-radius: 4px; }"
+        "QPushButton:hover { background-color: #3A3A3A; color: #C4C4C4; }");
+    connect(updateBtn, &QPushButton::clicked, this, [this]() {
+        arete::update::UpdateService::promptAndApply(this, "visio", "visio_gui");
+    });
+    m_toolbar->addWidget(updateBtn);
 }
 
 void MainWindow::setupStatusBar()
@@ -424,8 +538,26 @@ void MainWindow::populatePlaylists()
     auto playlists = m_client.listPlaylists();
     if (!playlists.hasValue()) return;
     for (const auto& name : playlists.value()) {
-        auto* item = new QListWidgetItem(QString::fromStdString(name));
+        auto pl = PlaylistUtils::loadPlaylist(name);
+        QString label = QString::fromStdString(name);
+        if (pl.hasValue()) {
+            label += QStringLiteral("   (%1 videos)").arg(pl.value().size());
+            if (!pl.value().empty()) {
+                const auto& first = pl.value().front();
+                if (!first.thumbnail.empty()) {
+                    auto* item = new QListWidgetItem(label);
+                    item->setData(Qt::UserRole, QString::fromStdString(name));
+                    item->setData(Qt::UserRole + 1, QString::fromStdString(first.thumbnail));
+                    item->setSizeHint(QSize(0, 48));
+                    loadThumbnail(QString::fromStdString(first.thumbnail), item);
+                    m_playlistList->addItem(item);
+                    continue;
+                }
+            }
+        }
+        auto* item = new QListWidgetItem(label);
         item->setData(Qt::UserRole, QString::fromStdString(name));
+        item->setSizeHint(QSize(0, 48));
         m_playlistList->addItem(item);
     }
 }
@@ -436,8 +568,53 @@ QListWidgetItem* MainWindow::makeVideoItem(const Video& video)
         video.title, video.author, video.duration, formatViews(video.views).toStdString());
     auto* item = new QListWidgetItem(QString::fromStdString(text));
     item->setData(Qt::UserRole, QString::fromStdString(video.id));
+    if (!video.thumbnail.empty()) {
+        item->setData(Qt::UserRole + 1, QString::fromStdString(video.thumbnail));
+        loadThumbnail(QString::fromStdString(video.thumbnail), item);
+    }
     item->setToolTip(QString::fromStdString(video.title));
+    item->setSizeHint(QSize(0, 64));
     return item;
+}
+
+void MainWindow::loadThumbnail(const QString& url, QListWidgetItem* item)
+{
+    if (url.isEmpty() || !item) return;
+
+    if (const auto it = m_thumbnailCache.constFind(url); it != m_thumbnailCache.constEnd()) {
+        item->setIcon(it.value());
+        return;
+    }
+    if (m_thumbnailPending.contains(url)) return;
+
+    m_thumbnailPending.insert(url);
+    auto* reply = m_thumbnailManager->get(QNetworkRequest(QUrl(url)));
+    connect(reply, &QNetworkReply::finished, this, [this, reply, url]() {
+        reply->deleteLater();
+        m_thumbnailPending.remove(url);
+        if (reply->error() != QNetworkReply::NoError) return;
+
+        QPixmap pix;
+        if (!pix.loadFromData(reply->readAll())) return;
+
+        const QIcon icon(pix.scaled(120, 68, Qt::KeepAspectRatio,
+                                    Qt::SmoothTransformation));
+        m_thumbnailCache.insert(url, icon);
+
+        // Apply to every visible item that references this URL.
+        for (auto* list : { static_cast<QListWidget*>(m_searchResults),
+                            static_cast<QListWidget*>(m_historyList),
+                            static_cast<QListWidget*>(m_queueList),
+                            static_cast<QListWidget*>(m_playlistList) }) {
+            for (int i = 0; i < list->count(); ++i) {
+                auto* item = list->item(i);
+                if (item->icon().isNull() &&
+                    item->data(Qt::UserRole + 1).toString() == url) {
+                    item->setIcon(icon);
+                }
+            }
+        }
+    });
 }
 
 void MainWindow::onSearchResultClicked(int row)
@@ -507,24 +684,88 @@ void MainWindow::onPlay()
 void MainWindow::onDownload()
 {
     if (m_currentVideo.id.empty()) return;
+    startDownload(m_currentVideo);
+}
 
-    auto dir = QFileDialog::getExistingDirectory(this, "Download to",
+void MainWindow::startDownload(const Video& video, bool audioOnly)
+{
+    auto dir = QFileDialog::getExistingDirectory(this,
+        audioOnly ? "Download MP3 to" : "Download to",
         QDir::homePath() + "/Downloads");
     if (dir.isEmpty()) return;
 
     auto quality = static_cast<Quality>(m_qualitySelector->currentData().toInt());
-    auto video = m_currentVideo;
+    auto videoCopy = video;
     auto dirStr = dir.toStdString();
 
-    setStatus(QString::fromStdString(std::format("Downloading: {}", video.title)));
+    if (audioOnly)
+        setStatus(QStringLiteral("Downloading MP3: %1").arg(QString::fromStdString(video.title)));
+    else
+        setStatus(QStringLiteral("Downloading: %1").arg(QString::fromStdString(video.title)));
 
-    std::thread([this, video, dirStr, quality]() {
-        auto result = m_client.download(video, dirStr, quality);
+    std::thread([this, videoCopy, dirStr, quality, audioOnly]() {
+        auto result = audioOnly
+            ? m_client.downloadAudio(videoCopy, dirStr)
+            : m_client.download(videoCopy, dirStr, quality);
         auto ok = result.hasValue();
-        auto msg = ok ? std::string("Download complete")
-                      : std::format("Download failed: {}", result.error().message());
-        QMetaObject::invokeMethod(this, [this, ok, msg]() {
-            setStatus(QString::fromStdString(msg));
+        QString msg = ok
+            ? QString(audioOnly ? "MP3 download complete" : "Download complete")
+            : downloadFailure(result.error());
+        QString failedId = ok ? QString() : QString::fromStdString(videoCopy.id);
+        QMetaObject::invokeMethod(this, [this, ok, msg, failedId]() {
+            if (!ok && !failedId.isEmpty() && !m_failedIds.contains(failedId)) {
+                m_failedIds.append(failedId);
+                if (m_retryBtn) m_retryBtn->setEnabled(!m_failedIds.isEmpty());
+            }
+            setStatus(msg);
+        }, Qt::QueuedConnection);
+    }).detach();
+}
+
+void MainWindow::addDownload(const QString& url)
+{
+    // Extract video id from a URL (watch?v=, youtu.be/, /embed/, /shorts/)
+    std::string_view sv = url.toStdString();
+    auto videoId = [&]() -> std::string {
+        const auto vPos = url.indexOf(QStringLiteral("v="));
+        if (vPos != -1) {
+            const QString id = url.mid(vPos + 2).section(QLatin1Char('&'), 0, 0);
+            if (id.size() == 11) return id.toStdString();
+        }
+        if (url.contains(QStringLiteral("youtu.be/"))) {
+            const QString id = url.section(QStringLiteral("youtu.be/"), 1, 1).section(QLatin1Char('?'), 0, 0);
+            if (id.size() == 11) return id.toStdString();
+        }
+        return {};
+    }();
+
+    if (videoId.empty()) {
+        setStatus(QStringLiteral("Could not parse video URL: %1").arg(url));
+        return;
+    }
+
+    setStatus(QStringLiteral("Resolving: %1").arg(url));
+    std::thread([this, videoId, url]() {
+        auto info = m_client.getVideo(videoId);
+        auto okInfo = info.hasValue();
+        auto videoValue = okInfo ? info.value() : Video{};
+        QMetaObject::invokeMethod(this, [this, okInfo, videoValue, url]() {
+            if (!okInfo) {
+                setStatus(QStringLiteral("Could not resolve video: %1").arg(url));
+                return;
+            }
+            const Video video = videoValue;
+            const QString dir = QDir::homePath() + "/Downloads";
+            setStatus(QString::fromStdString(std::format("Downloading: {}", video.title)));
+            std::thread([this, video, dir]() {
+                auto result = m_client.download(video, dir.toStdString());
+                auto ok = result.hasValue();
+                auto msg = ok ? std::string("Download complete")
+                              : std::format("Download failed: {}", result.error().message());
+                QMetaObject::invokeMethod(this, [this, ok, msg]() {
+                    setStatus(QString::fromStdString(msg));
+                }, Qt::QueuedConnection);
+            }).detach();
         }, Qt::QueuedConnection);
     }).detach();
 }
@@ -532,25 +773,7 @@ void MainWindow::onDownload()
 void MainWindow::onDownloadMp3()
 {
     if (m_currentVideo.id.empty()) return;
-
-    auto dir = QFileDialog::getExistingDirectory(this, "Download MP3 to",
-        QDir::homePath() + "/Downloads");
-    if (dir.isEmpty()) return;
-
-    auto video = m_currentVideo;
-    auto dirStr = dir.toStdString();
-
-    setStatus(QString::fromStdString(std::format("Downloading MP3: {}", video.title)));
-
-    std::thread([this, video, dirStr]() {
-        auto result = m_client.downloadAudio(video, dirStr);
-        auto ok = result.hasValue();
-        auto msg = ok ? std::string("MP3 download complete")
-                      : std::format("MP3 download failed: {}", result.error().message());
-        QMetaObject::invokeMethod(this, [this, ok, msg]() {
-            setStatus(QString::fromStdString(msg));
-        }, Qt::QueuedConnection);
-    }).detach();
+    startDownload(m_currentVideo, true);
 }
 
 void MainWindow::onDownloadPlaylist()
@@ -573,10 +796,10 @@ void MainWindow::onDownloadPlaylist()
     std::thread([this, results, dirStr, quality]() {
         auto result = m_client.downloadMultiple(results, dirStr, quality);
         auto ok = result.hasValue();
-        auto msg = ok ? std::string("Batch download complete")
-                      : std::format("Batch download failed: {}", result.error().message());
+        QString msg = ok ? QStringLiteral("Batch download complete")
+                         : downloadFailure(result.error());
         QMetaObject::invokeMethod(this, [this, ok, msg]() {
-            setStatus(QString::fromStdString(msg));
+            setStatus(msg);
         }, Qt::QueuedConnection);
     }).detach();
 }
@@ -747,17 +970,17 @@ void MainWindow::onShowInfo()
                  formatViews(video.views),
                  QString::fromStdString(video.published)),
         dialog);
-    meta->setStyleSheet(QStringLiteral("color: #A9A9A9;"));
+    meta->setStyleSheet(QStringLiteral("color: #A0A0A0;"));
     layout->addWidget(meta);
 
     auto* idLabel = new QLabel(
         QStringLiteral("Video ID: %1").arg(QString::fromStdString(video.id)), dialog);
-    idLabel->setStyleSheet(QStringLiteral("color: #8A8A8A; font-family: monospace;"));
+    idLabel->setStyleSheet(QStringLiteral("color: #B0B0B0; font-family: monospace;"));
     layout->addWidget(idLabel);
 
     const QString watchUrl = QString::fromStdString(VideoUtils::watchUrl(video.id));
     auto* urlLabel = new QLabel(
-        QStringLiteral("<a href=\"%1\" style=\"color: #8A8A8A;\">%1</a>").arg(watchUrl), dialog);
+        QStringLiteral("<a href=\"%1\" style=\"color: #B0B0B0;\">%1</a>").arg(watchUrl), dialog);
     urlLabel->setOpenExternalLinks(true);
     urlLabel->setTextInteractionFlags(Qt::TextBrowserInteraction);
     urlLabel->setWordWrap(true);
@@ -809,7 +1032,15 @@ void MainWindow::onLoadPlaylist()
     auto name = items[0]->data(Qt::UserRole).toString().toStdString();
     auto pl = m_client.loadPlaylist(name);
     if (!pl.hasValue()) {
-        setStatus(QString::fromStdString(std::format("Failed to load playlist: {}", pl.error().message())));
+        const auto& err = pl.error();
+        QString hint;
+        if (err.code() == ErrorCode::NotFound)
+            hint = QStringLiteral("The playlist file is missing — it may have been moved or deleted.");
+        else if (err.code() == ErrorCode::ParseError)
+            hint = QStringLiteral("The playlist file is corrupt or in an old format — delete it and save the queue again.");
+        else
+            hint = QString::fromStdString(err.message());
+        setStatus(QStringLiteral("Failed to load playlist: %1").arg(hint));
         return;
     }
 
@@ -1004,7 +1235,7 @@ void MainWindow::onHelp()
         "<li>Click items in History or Queue to re-view details</li>"
         "</ul>"
         "<hr>"
-        "<p style='color: #A9A9A9;'>Visio — C++20 Qt6 YouTube Browser</p>"
+        "<p style='color: #A0A0A0;'>Visio — C++20 Qt6 YouTube Browser</p>"
     );
     msg->setTextFormat(Qt::RichText);
     msg->setMinimumWidth(500);
@@ -1014,6 +1245,85 @@ void MainWindow::onHelp()
 void MainWindow::setStatus(const QString& message)
 {
     statusBar()->showMessage(message, 5000);
+}
+
+void MainWindow::onUpdateYtdlp()
+{
+    if (m_updateYtdlpBtn) m_updateYtdlpBtn->setEnabled(false);
+    setStatus("Updating yt-dlp...");
+    std::thread([this]() {
+        auto result = m_client.updateYtDlp();
+        auto ok = result.hasValue();
+        auto msg = ok ? std::string("yt-dlp updated successfully")
+                      : std::format("yt-dlp update failed: {}", result.error().message());
+        QMetaObject::invokeMethod(this, [this, ok, msg]() {
+            if (m_updateYtdlpBtn) m_updateYtdlpBtn->setEnabled(true);
+            setStatus(QString::fromStdString(msg));
+        }, Qt::QueuedConnection);
+    }).detach();
+}
+
+void MainWindow::onRetryFailed()
+{
+    if (m_failedIds.isEmpty()) return;
+    const QString id = m_failedIds.last();
+
+    auto history = m_client.getHistory();
+    if (history.hasValue()) {
+        for (const auto& v : history.value()) {
+            if (QString::fromStdString(v.id) == id) {
+                m_failedIds.removeAll(id);
+                if (m_retryBtn) m_retryBtn->setEnabled(!m_failedIds.isEmpty());
+                startDownload(v);
+                return;
+            }
+        }
+    }
+
+    // Not in history: re-resolve and download.
+    setStatus(QStringLiteral("Re-resolving %1...").arg(id));
+    std::thread([this, id]() {
+        auto info = m_client.getVideo(id.toStdString());
+        auto ok = info.hasValue();
+        auto video = ok ? info.value() : Video{};
+        QMetaObject::invokeMethod(this, [this, ok, video, id]() {
+            if (!ok) {
+                setStatus(QStringLiteral("Could not re-resolve video %1 (it may have been removed)").arg(id));
+                return;
+            }
+            m_failedIds.removeAll(id);
+            if (m_retryBtn) m_retryBtn->setEnabled(!m_failedIds.isEmpty());
+            startDownload(video);
+        }, Qt::QueuedConnection);
+    }).detach();
+}
+
+void MainWindow::onClipboardToggle(bool enabled)
+{
+    if (!m_clipboardTimer) return;
+    if (enabled) {
+        m_lastClipboardText = QApplication::clipboard()->text();
+        m_clipboardTimer->start();
+        setStatus("Clipboard watch enabled — copying a YouTube URL will ask to download it");
+    } else {
+        m_clipboardTimer->stop();
+        setStatus("Clipboard watch disabled");
+    }
+}
+
+void MainWindow::onWellnessReminder()
+{
+    auto* box = new QMessageBox(this);
+    box->setWindowTitle("Time for a break");
+    box->setIcon(QMessageBox::Information);
+    box->setText(
+        "<h3>You've been watching for a while</h3>"
+        "<p>Stand up, stretch, and rest your eyes for a couple of minutes.</p>"
+        "<p style='color: #A0A0A0;'>Reminder repeats every 45 minutes.</p>");
+    box->setTextFormat(Qt::RichText);
+    box->setAttribute(Qt::WA_DeleteOnClose);
+    box->open();
+    QApplication::alert(this);
 }
 
 } // namespace visio

@@ -11,6 +11,7 @@
 #include <QMouseEvent>
 #include <QRegularExpression>
 #include <QUrl>
+#include <QStackedWidget>
 
 namespace codex {
 
@@ -47,13 +48,20 @@ Editor::Editor(QWidget *parent)
     m_autosaveTimer->setSingleShot(true);
     connect(m_autosaveTimer, &QTimer::timeout, this, &Editor::autosave);
 
+    m_renderTimer = new QTimer(this);
+    m_renderTimer->setInterval(250);
+    m_renderTimer->setSingleShot(true);
+    connect(m_renderTimer, &QTimer::timeout, this, [this]() {
+        if (m_mode == Preview)
+            applyRendering();
+    });
+
     connect(m_sourceEdit, &QPlainTextEdit::textChanged, this, &Editor::onTextChanged);
     connect(m_sourceEdit, &QPlainTextEdit::cursorPositionChanged, this, &Editor::onCursorPosChanged);
     connect(m_preview, &QTextBrowser::anchorClicked, this, [this](const QUrl &url) {
         setMode(Source);
         Q_EMIT wikiLinkClicked(url.path());
     });
-
 }
 
 void Editor::loadFile(const std::filesystem::path &path)
@@ -77,7 +85,8 @@ void Editor::saveFile()
     if (m_currentFile.empty())
         return;
 
-    auto content = m_sourceEdit->toPlainText();
+    const QString content = m_sourceEdit->toPlainText();
+
     QFile file(QString::fromStdString(m_currentFile.string()));
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
         return;
@@ -116,13 +125,14 @@ void Editor::setVaultRoot(const std::filesystem::path &root)
 void Editor::setMode(Mode mode)
 {
     if (mode == m_mode) return;
+
     m_mode = mode;
-    setCurrentIndex(mode == Preview ? 1 : 0);
 
     if (mode == Preview) {
-        // Sync preview with latest source
+        setCurrentIndex(1);
         applyRendering();
     } else {
+        setCurrentIndex(0);
         m_sourceEdit->setFocus();
     }
     emit modeChanged(mode);
@@ -150,7 +160,10 @@ void Editor::setTextCursor(const QTextCursor &cursor)
 
 void Editor::setFocus()
 {
-    m_sourceEdit->setFocus();
+    if (m_mode == Preview)
+        m_preview->setFocus();
+    else
+        m_sourceEdit->setFocus();
 }
 
 void Editor::applyRendering()
@@ -197,16 +210,16 @@ void Editor::applyRendering()
         "a { color: %3; }"
         "h1, h2, h3, h4, h5, h6 { color: %3; margin: 0.8em 0 0.3em; }"
         "h1 { font-size: 1.6em; } h2 { font-size: 1.4em; } h3 { font-size: 1.2em; }"
-        "code { background: #2D2D2D; padding: 0.2em 0.4em; border-radius: 3px; }"
-        "pre { background: #2D2D2D; padding: 0.8em; border-radius: 4px; }"
+        "code { background: #333333; padding: 0.2em 0.4em; border-radius: 3px; }"
+        "pre { background: #333333; padding: 0.8em; border-radius: 4px; }"
         "pre code { background: none; padding: 0; }"
-        "blockquote { border-left: 3px solid %3; margin: 0.5em 0; padding: 0.3em 0.8em; background: #252525; }"
+        "blockquote { border-left: 3px solid %3; margin: 0.5em 0; padding: 0.3em 0.8em; background: #2E2E2E; }"
         "img { max-width: 100%%; border-radius: 4px; }"
         "video { max-width: 100%%; border-radius: 4px; }"
         "ul, ol { margin: 0.8em 0; padding-left: 2em; }"
         "ul.contains-task-list { list-style: none; padding-left: 0; }"
         "li.task-list-item { list-style: none; }"
-        "s { color: #888; }"
+        "s { color: #A0A0A0; }"
         "u { text-decoration: underline; }"
         ".center, div[style*=\"text-align:center\"] { text-align: center; }"
         "div[style*=\"text-align:left\"] { text-align: left; }"
@@ -235,7 +248,7 @@ void Editor::updateCodeBlockBackgrounds()
             continue;
 
         QTextEdit::ExtraSelection sel;
-        sel.format.setBackground(QColor("#252525"));
+        sel.format.setBackground(QColor("#2E2E2E"));
         sel.format.setProperty(QTextFormat::FullWidthSelection, true);
         QTextCursor cursor(block);
         cursor.select(QTextCursor::BlockUnderCursor);
@@ -262,6 +275,7 @@ void Editor::onTextChanged()
     }
     updateCodeBlockBackgrounds();
     emit textChanged();
+    m_renderTimer->start();
 }
 
 void Editor::onCursorPosChanged()

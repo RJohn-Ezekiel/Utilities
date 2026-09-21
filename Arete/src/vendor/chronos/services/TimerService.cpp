@@ -73,7 +73,6 @@ void TimerService::startFocus()
 void TimerService::startFocusForTask(const QString& taskId)
 {
     m_currentTaskId = taskId;
-    m_customLabel.clear();
     m_engine->start(SessionType::Focus, m_settings.focusDuration);
     saveSessionState();
 }
@@ -102,8 +101,8 @@ void TimerService::stop()
 {
     m_engine->stop();
     m_consecutiveFocusSessions = 0;
-    m_customLabel.clear();
     m_currentTaskId.clear();
+    m_customLabel.clear();
     m_storage->clearSessionState();
 }
 

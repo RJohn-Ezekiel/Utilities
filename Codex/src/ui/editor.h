@@ -68,6 +68,7 @@ private:
     Mode m_mode = Source;
     bool m_modified = false;
     QTimer *m_autosaveTimer;
+    QTimer *m_renderTimer;
     QString m_savedContent;
     void applyRendering();
     void updateCodeBlockBackgrounds();

@@ -21,7 +21,7 @@ TagsPanel::TagsPanel(QWidget *parent)
     m_tagInput = new QLineEdit;
     m_tagInput->setPlaceholderText(QStringLiteral("+ add tag..."));
     m_tagInput->setStyleSheet(QStringLiteral(
-        "QLineEdit { background: #252525; color: #D8D8D8; border: 1px solid #333; "
+        "QLineEdit { background: #333333; color: #C4C4C4; border: 1px solid #353535; "
         "border-radius: 3px; padding: 3px 6px; font-size: 12px; }"
     ));
     connect(m_tagInput, &QLineEdit::returnPressed, this, &TagsPanel::onAddTag);
@@ -54,7 +54,7 @@ void TagsPanel::showTags(const std::vector<std::string> &tags)
 
     if (tags.empty()) {
         auto *emptyLabel = new QLabel(QStringLiteral("No tags"));
-        emptyLabel->setStyleSheet(QStringLiteral("color: #666; font-size: 11px; padding: 4px 0;"));
+        emptyLabel->setStyleSheet(QStringLiteral("color: #A0A0A0; font-size: 11px; padding: 4px 0;"));
         m_tagLayout->insertWidget(0, emptyLabel);
         return;
     }
@@ -63,9 +63,9 @@ void TagsPanel::showTags(const std::vector<std::string> &tags)
         auto qTag = QString::fromStdString(t);
         auto *btn = new QPushButton(QStringLiteral("#%1").arg(qTag));
         btn->setStyleSheet(QStringLiteral(
-            "QPushButton { background: #252525; color: %1; border: none; "
+            "QPushButton { background: #242424; color: %1; border: none; "
             "padding: 3px 8px; border-radius: 3px; text-align: left; font-size: 12px; }"
-            "QPushButton:hover { background: #333; }"
+            "QPushButton:hover { background: #3A3A3A; }"
         ).arg(style::ACCENT));
         btn->setCursor(Qt::PointingHandCursor);
         connect(btn, &QPushButton::clicked, this, &TagsPanel::onTagClick);

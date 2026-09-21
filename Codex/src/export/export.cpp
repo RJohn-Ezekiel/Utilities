@@ -475,8 +475,8 @@ std::string ExportManager::htmlTemplate() {
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    background: #1B1B1B;
-    color: #D8D8D8;
+    background: #111111;
+    color: #C4C4C4;
     font-family: 'Segoe UI', -apple-system, Roboto, Helvetica, Arial, sans-serif;
     font-size: 16px;
     line-height: 1.7;
@@ -484,23 +484,23 @@ std::string ExportManager::htmlTemplate() {
     margin: 0 auto;
     padding: 2.5em 1.5em;
   }
-  a { color: #8A8A8A; text-decoration: none; }
+  a { color: #B0B0B0; text-decoration: none; }
   a:hover { text-decoration: underline; }
-  h1, h2, h3, h4, h5, h6 { color: #8A8A8A; margin: 1.2em 0 0.5em; font-weight: 600; }
-  h1 { font-size: 2em; border-bottom: 1px solid #333; padding-bottom: 0.3em; }
+  h1, h2, h3, h4, h5, h6 { color: #D0D0D0; margin: 1.2em 0 0.5em; font-weight: 600; }
+  h1 { font-size: 2em; border-bottom: 1px solid #353535; padding-bottom: 0.3em; }
   h2 { font-size: 1.6em; }
   h3 { font-size: 1.3em; }
   p { margin: 0.8em 0; }
   code {
-    background: #2B2B2B;
-    color: #D8D8D8;
+    background: #333333;
+    color: #C4C4C4;
     padding: 0.2em 0.4em;
     border-radius: 3px;
     font-family: 'JetBrains Mono', 'Fira Code', monospace;
     font-size: 0.9em;
   }
   pre {
-    background: #2B2B2B;
+    background: #333333;
     padding: 1em;
     border-radius: 5px;
     overflow-x: auto;
@@ -512,16 +512,16 @@ std::string ExportManager::htmlTemplate() {
   ul.contains-task-list { list-style: none; padding-left: 0; }
   li.task-list-item { list-style: none; }
   blockquote {
-    border-left: 3px solid #8A8A8A;
+    border-left: 3px solid #D0D0D0;
     margin: 1em 0;
     padding: 0.5em 1em;
-    background: #222;
+    background: #2E2E2E;
     color: #B0B0B0;
   }
-  hr { border: none; border-top: 1px solid #333; margin: 1.5em 0; }
+  hr { border: none; border-top: 1px solid #353535; margin: 1.5em 0; }
   img { max-width: 100%; border-radius: 4px; }
-  input[type=checkbox] { accent-color: #8A8A8A; margin-right: 0.5em; }
-  s { color: #888; }
+  input[type=checkbox] { accent-color: #D0D0D0; margin-right: 0.5em; }
+  s { color: #A0A0A0; }
   u { text-decoration: underline; }
   .center, div[style*="text-align:center"] { text-align: center; }
   div[style*="text-align:left"] { text-align: left; }

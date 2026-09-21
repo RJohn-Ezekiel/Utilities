@@ -30,15 +30,16 @@ public:
 public slots:
     void startFocus();
     void startFocusForTask(const QString& taskId);
-    // Custom focus session with an arbitrary length and a free-form label
-    // (used by Arete's workday flows). Minutes are clamped to 1..480.
-    void startCustom(const QString& label, int minutes);
     void pause();
     void resume();
     void stop();
     void skipBreak();
     void proceedToBreak(const QString& note);
     void skipAfterSession(const QString& note);
+
+    // Arete extension: run a custom-length focus session with an optional
+    // label that is stored as the session note.
+    void startCustom(const QString& label, int minutes);
 
 signals:
     void stateChanged(TimerState state, SessionType sessionType);
@@ -65,8 +66,8 @@ private:
     Settings m_settings;
     int m_consecutiveFocusSessions = 0;
     QString m_currentTaskId;
-    QString m_customLabel;
     QString m_pendingSessionId;
+    QString m_customLabel;
 };
 
 } // namespace chronos

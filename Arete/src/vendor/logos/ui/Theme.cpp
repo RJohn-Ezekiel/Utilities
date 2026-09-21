@@ -222,7 +222,9 @@ QString styleSheet()
 
 void apply()
 {
-    qApp->setStyleSheet(styleSheet());
+    // Arete owns the application stylesheet; the vendored Logos theme is
+    // applied per-widget only, so avoid clobbering the shell's theme.
+    Q_UNUSED(qApp);
 }
 
 } // namespace Theme

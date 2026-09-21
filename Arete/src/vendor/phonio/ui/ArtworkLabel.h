@@ -30,9 +30,6 @@ protected:
     void paintEvent(QPaintEvent* event) override;
 
 private:
-    void drawScaled(QPainter& painter, const QRectF& target, const QPixmap& pixmap);
-
-private:
     QPixmap m_pixmap;
     QPixmap m_oldPixmap;
     QPropertyAnimation* m_fade;

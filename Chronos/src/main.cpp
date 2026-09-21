@@ -11,6 +11,23 @@
 #include "ui/MainWindow.h"
 #include "cli/CommandLineParser.h"
 
+#include "arete/ipc/Ipc.h"
+#include "arete/logging/Logger.h"
+
+// Route Qt's own debug output into the internal logger instead of the terminal.
+static void qtMessageHandler(QtMsgType type, const QMessageLogContext&, const QString& msg)
+{
+    using namespace arete::logging;
+    auto& logger = Logger::instance();
+    switch (type) {
+        case QtDebugMsg:    logger.debug(msg, QStringLiteral("qt")); break;
+        case QtInfoMsg:     logger.info(msg, QStringLiteral("qt")); break;
+        case QtWarningMsg:  logger.warning(msg, QStringLiteral("qt")); break;
+        case QtCriticalMsg: logger.error(msg, QStringLiteral("qt")); break;
+        case QtFatalMsg:    logger.critical(msg, QStringLiteral("qt")); break;
+    }
+}
+
 __attribute__((constructor))
 static void earlySuppress()
 {
@@ -22,8 +39,13 @@ int main(int argc, char* argv[])
 {
     QApplication app(argc, argv);
     app.setApplicationName(QStringLiteral("Chronos"));
-    app.setApplicationVersion(QStringLiteral("1.0.0"));
-    app.setOrganizationName(QStringLiteral("Chronos"));
+    app.setApplicationVersion(QStringLiteral("1.1.0"));
+    app.setOrganizationName(QStringLiteral("Arete"));
+
+    // Internal logging: never print to the terminal during normal operation.
+    auto& logger = arete::logging::Logger::instance();
+    logger.setMinLevel(arete::logging::Level::Info);
+    qInstallMessageHandler(qtMessageHandler);
 
     // ── CLI (non-GUI actions) ──
     auto cliResult = chronos::parseCommandLine(app.arguments());
@@ -41,6 +63,19 @@ int main(int argc, char* argv[])
         return 0;
     case chronos::CliAction::LaunchGui:
         break; // continue below
+    }
+
+    // ── Single instance + deep-linking (arete://chronos/session/start) ──
+    static arete::ipc::IpcServer ipc(QStringLiteral("arete-chronos"));
+    if (!ipc.start()) {
+        const auto args = app.arguments();
+        for (const QString& arg : args) {
+            if (arg.startsWith(QStringLiteral("arete://"))) {
+                const bool forwarded = arete::ipc::forwardUriToRunningInstance(QStringLiteral("arete-chronos"), QUrl(arg));
+                Q_UNUSED(forwarded)
+                return 0;
+            }
+        }
     }
 
     // ── Font ──
@@ -63,10 +98,21 @@ int main(int argc, char* argv[])
 
     // ── UI ──
     chronos::MainWindow window(timerSvc, taskSvc, statsSvc, reminders, notifSvc);
+
+    // Handle deep links
+    const auto args = app.arguments();
+    for (const QString& arg : args) {
+        if (arg.startsWith(QStringLiteral("arete://"))) {
+            const auto action = arete::ipc::parseUri(arg);
+            if (action.app == QStringLiteral("chronos") && action.command == QStringLiteral("session/start")) {
+                timerSvc->startFocus();
+            }
+        }
+    }
+
     window.show();
 
     // Dev helper: render the window to a PNG and exit (used for visual checks).
-    const auto args = app.arguments();
     const auto shotIdx = args.indexOf(QStringLiteral("--screenshot"));
     if (shotIdx != -1 && shotIdx + 1 < args.size()) {
         window.grab().save(args.at(shotIdx + 1));

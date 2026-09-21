@@ -24,6 +24,7 @@
 #include "arete/dialogs/DiagnosticsDialog.h"
 #include "arete/ipc/Ipc.h"
 #include "arete/logging/Logger.h"
+#include "arete/update/UpdateService.h"
 
 #include <QAction>
 #include <QApplication>
@@ -65,7 +66,8 @@ MainWindow::~MainWindow()
 
 void MainWindow::setupUI()
 {
-    // Global stylesheet is owned by the host application (Arete).
+    Theme::apply();
+
     auto* central = new QWidget;
     auto* root = new QVBoxLayout(central);
     root->setContentsMargins(0, 0, 0, 0);
@@ -116,12 +118,6 @@ void MainWindow::setupUI()
     connect(hymnBtn, &QPushButton::clicked, this, &MainWindow::onHymnMode);
     barLayout->addWidget(hymnBtn);
 
-    auto* exitModeBtn = new QPushButton("Exit Mode");
-    exitModeBtn->setFixedHeight(26);
-    exitModeBtn->setToolTip("Back to Bible mode (Esc)");
-    connect(exitModeBtn, &QPushButton::clicked, this, &MainWindow::onExitMode);
-    barLayout->addWidget(exitModeBtn);
-
     barLayout->addStretch();
 
     searchBar_ = new SearchBar;
@@ -146,6 +142,9 @@ void MainWindow::setupUI()
         arete::dialogs::DiagnosticsDialog::openDialog(this);
     });
     barLayout->addWidget(diagBtn);
+
+    auto* updateBtn = new arete::update::UpdateButton("logos", {}, {"prayer.json", "hymns.json"});
+    barLayout->addWidget(updateBtn);
 
     root->addWidget(bar);
 
@@ -693,5 +692,5 @@ void MainWindow::saveSettings()
 
 void MainWindow::applySettings()
 {
-    // Theme::apply() is a no-op: the host application owns the stylesheet.
+    Theme::apply();
 }

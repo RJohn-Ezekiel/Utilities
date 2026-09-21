@@ -22,6 +22,7 @@
 #include "ui/LyricsEditorDialog.h"
 
 #include "arete/dialogs/DiagnosticsDialog.h"
+#include "arete/update/UpdateService.h"
 
 #include <QAbstractButton>
 #include <QListWidget>
@@ -48,6 +49,7 @@ enum SidebarItem {
     SidebarQueue,
     SidebarSettings,
     SidebarDiagnostics,
+    SidebarUpdate,
     SidebarCount,
 };
 
@@ -109,7 +111,7 @@ MainWindow::MainWindow(App* app, QWidget* parent)
     m_sidebar->setSpacing(2);
     const QStringList items = { tr("Library"), tr("Artists"), tr("Albums"),
                                 tr("Playlists"), tr("Genres"), tr("Queue"),
-                                tr("Settings"), tr("Diagnostics") };
+                                tr("Settings"), tr("Diagnostics"), tr("Update") };
     for (const QString& item : items)
         m_sidebar->addItem(item);
     sidebarLayout->addWidget(m_sidebar, 1);
@@ -189,6 +191,13 @@ void MainWindow::onSidebarChanged(int row)
         m_sidebar->blockSignals(false);
         return;
     }
+    if (row == SidebarUpdate) {
+        arete::update::UpdateService::promptAndApply(this, QStringLiteral("phonio"));
+        m_sidebar->blockSignals(true);
+        m_sidebar->setCurrentRow(m_browserStackIndex);
+        m_sidebar->blockSignals(false);
+        return;
+    }
     m_browserStackIndex = row;
     m_stack->setCurrentIndex(row);
 }
@@ -233,8 +242,8 @@ void MainWindow::onPlaybackStateChanged()
 {
     // Title keeps the user informed even when minimized.
     if (const auto track = m_controller->currentTrack()) {
-        const QString playing = m_controller->isPlaying() ? QStringLiteral(">> ")
-                                                          : QStringLiteral("|| ");
+        const QString playing = m_controller->isPlaying() ? QStringLiteral("\u25B6 ")
+                                                          : QStringLiteral("\u275A\u275A ");
         setWindowTitle(QStringLiteral("%1%2 - %3").arg(playing, track->displayTitle(), tr("Phonio")));
     }
 }

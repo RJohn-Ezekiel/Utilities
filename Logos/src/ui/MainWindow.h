@@ -20,8 +20,12 @@
 class Bible;
 class BookmarkStorage;
 class HistoryStorage;
+class HymnLibrary;
+class HymnModeWidget;
 class NoteStorage;
 class NotesPanel;
+class PrayerLibrary;
+class PrayerModeWidget;
 class ReaderPane;
 class SearchBar;
 class SearchService;
@@ -36,6 +40,12 @@ public:
 
     void loadBibles(const std::string& biblesPath = "Bibles");
     void navigateTo(const Reference& ref);
+    void openUri(const QString& uri);
+    void openPrayerMode();
+    void openHymnMode();
+    void exitMode();
+    void selectPrayerByText(const QString& text);
+    void selectHymnByText(const QString& text);
 
 private slots:
     void onNavigate();
@@ -47,6 +57,9 @@ private slots:
     void onToggleNotes();
     void onToggleSidebar();
     void openSettings();
+    void onPrayerMode();
+    void onHymnMode();
+    void onExitMode();
 
 private:
     void setupUI();
@@ -68,6 +81,12 @@ private:
     std::unique_ptr<BookmarkStorage> bookmarkStorage_;
     std::unique_ptr<HistoryStorage> historyStorage_;
     std::unique_ptr<NoteStorage> noteStorage_;
+
+    // Prayer / hymn libraries
+    std::unique_ptr<PrayerLibrary> prayerLibrary_;
+    std::unique_ptr<HymnLibrary> hymnLibrary_;
+    PrayerModeWidget* prayerMode_ = nullptr;
+    HymnModeWidget* hymnMode_ = nullptr;
 
     // Services
     std::unique_ptr<SearchService> searchService_;
@@ -98,4 +117,5 @@ private:
 
     // State
     bool sideBySideMode_ = false;
+    bool inAltMode_ = false;
 };

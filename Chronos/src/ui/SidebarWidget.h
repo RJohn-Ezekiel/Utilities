@@ -16,6 +16,7 @@ public:
         History,
         Statistics,
         Settings,
+        Diagnostics,
         PageCount
     };
 
