@@ -338,6 +338,11 @@ void SettingsModule::onUpdateStateChanged()
         m_updateButton->setText(QStringLiteral("Update now"));
         m_updateButton->setEnabled(true);
         break;
+    case UpdateChecker::State::Compiling:
+        m_updateStatus->setText(QStringLiteral("Compiling from local sources\u2026"));
+        m_updateButton->setEnabled(false);
+        m_updateButton->setText(QStringLiteral("Compiling\u2026"));
+        break;
     case UpdateChecker::State::Downloading:
         m_updateStatus->setText(QStringLiteral("Downloading update\u2026"));
         m_updateButton->setEnabled(false);
